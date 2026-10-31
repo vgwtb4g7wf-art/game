@@ -1,5 +1,6 @@
 """Небольшая самостоятельная карточная система: одна цель, три энергии."""
 from eterion import BRANCHES
+from progression import TREES, unlocked
 
 CARDS = {}
 
@@ -46,24 +47,28 @@ item('Печать посланника',2,0,0,3,[('Слово власти',1,7
 item('Рунная монета',0,1,0,0,[('Рунный удар',1,10,0,0,5),('Каменная руна',1,0,12,0,0)])
 
 SKILL_POWER = {}
-BONUSES = {
-    'Мощь': [('hp',6),('damage',2),('armor',1)],
-    'Знания': [('hit',3),('hp',4),('damage',2)],
-    'Хитрость': [('dodge',4),('hit',5),('damage',2)],
-    'Дипломатия': [('hp',4),('dodge',3),('armor',1)],
-}
-for branch, names in BRANCHES.items():
-    for i, name in enumerate(names):
-        if branch == 'Мощь':
-            key = card('skill:'+name, name, 1, 8+i*2, 2+i*2)
-        elif branch == 'Знания':
-            key = card('skill:'+name, name, 1, 5+i*2, 0, 3+i, 10)
-        elif branch == 'Хитрость':
-            key = card('skill:'+name, name, 1, 7+i*2, 2+i, 0, 15)
+for branch,tree in TREES.items():
+    names=tree['common']+tree['left']+tree['right']
+    for i,name in enumerate(names):
+        rank=min(i,3)
+        if branch=='Мощь':
+            key=card('skill:'+name,name,1,9+rank*2,3)
+            stat,amount=('hp',6) if i==0 else ('damage',2) if i in (1,4) else ('armor',1)
+        elif branch=='Знания':
+            key=card('skill:'+name,name,1,7+rank,0,3+rank,10)
+            stat,amount=('hit',3) if i==0 else ('hp',4) if i==1 else ('damage',2)
+        elif branch=='Хитрость':
+            key=card('skill:'+name,name,1,9+rank,2,0,15)
+            stat,amount=('dodge',4) if i in (0,2,3) else ('hit',5)
         else:
-            key = card('skill:'+name, name, 1, 0, 7+i*2, 2+i)
-        stat, amount = BONUSES[branch][i]
-        SKILL_POWER[name] = dict(card=key, stat=stat, amount=amount)
+            key=card('skill:'+name,name,1,0,8+rank,3)
+            stat,amount=('hp',4) if i==0 else ('dodge',3) if i==1 else ('armor',1)
+        SKILL_POWER[name]=dict(card=key,stat=stat,amount=amount)
+
+
+def active_skills(hero):
+    available=unlocked(hero)
+    return [s for s in getattr(hero,'selected_skills',available[:3]) if s in available][:3]
 
 
 def stats(hero):
@@ -72,21 +77,19 @@ def stats(hero):
         if name:
             for key in ('hp','armor','dodge','hit'):
                 result[key] += ITEM_POWER[name][key]
-    for branch, level in hero.branches.items():
-        for name in BRANCHES[branch][:level]:
-            effect = SKILL_POWER[name]
-            result[effect['stat']] += effect['amount']
+    for name in active_skills(hero):
+        effect=SKILL_POWER[name]
+        result[effect['stat']]+=effect['amount']
     result['dodge'] = max(0, min(45, result['dodge']))
     result['hit'] = max(50, min(98, result['hit']))
     return result
 
 
 def deck(hero, consumables):
-    entries = [(key, 'Основы') for key in ['strike']*3 + ['guard']*2 + ['breath']]
+    entries=[(key,'Основы') for key in ['strike','strike','guard','breath']]
     for name in hero.equipment.values():
         if name:
-            entries.extend((key, name) for key in ITEM_POWER[name]['cards'] for _ in range(2))
-    for branch, level in hero.branches.items():
-        entries.extend((SKILL_POWER[name]['card'], name) for name in BRANCHES[branch][:level])
-    entries.extend((key, 'Расходуемая карта') for key, count in consumables.items() for _ in range(count))
+            entries.extend((key,name) for key in ITEM_POWER[name]['cards'])
+    entries.extend((SKILL_POWER[name]['card'],name) for name in active_skills(hero))
+    entries.extend((key,'Одноразовая карта') for key,count in consumables.items() for _ in range(count))
     return entries

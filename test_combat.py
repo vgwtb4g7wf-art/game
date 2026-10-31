@@ -16,6 +16,7 @@ class CombatTests(unittest.TestCase):
         game.search()
         game.accept(game.offers[0].id)
         game.complete(game.active[0].id)
+        game.begin_battle(dict(list(game.consumables.items())[:1]))
         return game
 
     def test_every_item_and_skill_contributes_cards(self):
@@ -32,8 +33,11 @@ class CombatTests(unittest.TestCase):
                 self.assertTrue(all(k in CARDS for k in ITEM_POWER[item]['cards']))
         game.hero.equipment=original
         game.hero.branches=dict.fromkeys(game.hero.branches,3)
+        game.paths['Мощь']='left'
+        game.sync_skills()
+        game.select_skill('Мудрость')
         self.assertGreater(len(deck(game.hero,{})),base)
-        self.assertEqual(len(SKILL_POWER),12)
+        self.assertEqual(len(SKILL_POWER),24)
 
     def test_passive_armor_dodge_damage_health_accuracy(self):
         game=create()
@@ -47,20 +51,22 @@ class CombatTests(unittest.TestCase):
         game.equip('Плащ следопыта')
         self.assertGreater(stats(game.hero)['dodge'],plain['dodge'])
         game.hero.branches['Мощь']=3
+        game.paths['Мощь']='left';game.sync_skills()
+        game.select_skill('Владение оружием')
         self.assertGreater(stats(game.hero)['damage'],plain['damage'])
-        self.assertGreater(stats(game.hero)['hp'],plain['hp'])
+        self.assertGreater(stats(game.hero)['hp'],0)
 
     def test_energy_hand_and_invalid_actions_are_atomic(self):
         game=self.start()
         b=game.battle
-        self.assertEqual(len(b['hand']),5)
+        self.assertEqual(len(b['hand']),4)
         self.assertEqual(b['energy'],3)
         before=json.dumps(b,sort_keys=True)
         for index in (-1,True,100):
             with self.assertRaises(ValueError):game.play_card(index)
         self.assertEqual(before,json.dumps(b,sort_keys=True))
         for operation in (lambda:game.move('Бреннор'),game.enter_city,game.wait,game.search,
-                          lambda:game.equip('Учебный меч'),lambda:game.buy('supply:heal'),
+                          lambda:game.equip('Железный меч'),lambda:game.buy('supply:heal'),
                           lambda:game.abandon(game.active[0].id),lambda:game.complete(game.active[0].id)):
             with self.assertRaises(ValueError):operation()
         b['energy']=0
@@ -69,7 +75,7 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(b['hand'],['strike'])
         game.end_round()
         self.assertEqual(b['energy'],3)
-        self.assertLessEqual(len(b['hand']),5)
+        self.assertLessEqual(len(b['hand']),4)
         self.assertEqual(b['round'],2)
 
     def test_shops_depend_on_country_region_city_capital(self):

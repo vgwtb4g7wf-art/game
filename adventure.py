@@ -8,6 +8,8 @@ from eterion import Game, ITEMS, REGIONS, BRANCHES
 from battle_rules import BattleRules
 from world_content import BIOMES, REGION_LORE, monster_tier, CONSUMABLES
 from combat import stats
+from progression import COSTS, TREES, unlocked
+from world_systems import WorldSystems
 
 ITEMS.update({
     'Железный меч': ('Оружие', 'Прямой клинок городской стражи.'),
@@ -24,6 +26,9 @@ ITEMS.update({
     'Печать посланника': ('Артефакт', 'Бронзовая печать забытого дома.'),
     'Рунная монета': ('Артефакт', 'Дварфийская монета с древней руной.'),
 })
+
+ALIASES = {'Учебный меч':'Железный меч','Посох ученика':'Охотничье копьё'}
+AVAILABLE_ITEMS = {k:v for k,v in ITEMS.items() if k not in ALIASES}
 
 MONSTERS = {
     1: [('Пещерная крыса', 'Обитает в подвалах и заброшенных рудниках.'), ('Серый волк', 'Охотится у лесных дорог.'), ('Болотный слизень', 'Скрывается в стоячей воде.')],
@@ -61,9 +66,10 @@ class Quest:
     distance: int = 0
     monster_tier: int = 0
     origin_city: bool = False
+    method: str = "Поработать"
 
 
-class Adventure(BattleRules, Game):
+class Adventure(WorldSystems, BattleRules, Game):
     def __init__(self, hero):
         super().__init__(hero)
         self.xp = 0
@@ -78,6 +84,11 @@ class Adventure(BattleRules, Game):
         self.purchases = {}
         self.battle = None
         self.last_battle = None
+        self.init_world()
+
+    @classmethod
+    def create(cls,name,gender,race,background,item,region,human_branch='Дипломатия'):
+        return super().create(name,gender,race,background,ALIASES.get(item,item),region,human_branch)
 
     def reachable(self):
         seen = {self.hero.region}
@@ -126,7 +137,9 @@ class Adventure(BattleRules, Game):
             monster = None
             tier = 0
             if index in (0,3):
-                tier = 1 if index==0 else rng.randint(2,5)
+                cap=min(5,1+self.xp//100+2)
+                penalty=min(1,distance//3)
+                tier=1 if index==0 else rng.randint(1,max(1,cap-penalty))
                 monster = monsters[tier-1]
                 title, branch = f'Охота: {monster}', 'Мощь'
                 description = f'{lore.capitalize()}: местным жителям угрожает {monster}. Найдите противника в регионе {target}. Земли: {biome}.'
@@ -135,24 +148,30 @@ class Adventure(BattleRules, Game):
             elif index==2:
                 title, branch, description = local_title+' · '+target, local_branch, local_description+' Место: '+lore+'.'
                 city = self.in_city
-                base = 1 + int(self.in_city) + int(self.in_city and REGIONS[target].capital)
+                base = 1+int(self.in_city)
             else:
                 if self.in_city:
                     title, branch, description = ('Поручение двора' if REGIONS[self.hero.region].capital else 'Заказ городской гильдии'), 'Дипломатия', 'Доставьте документы и согласуйте условия с представителем гильдии.'
                     city = True
-                    base = 2+int(REGIONS[self.hero.region].capital)
+                    base = 2
                 else:
                     title, branch, description = 'Пропажа на тракте', 'Хитрость', 'Отыщите потерянные вещи каравана и верните их смотрителю стоянки.'
                     city = False
                     base = 1
                 title += ' · '+target
                 description += ' Место: '+lore+'.'
-            difficulty = min(5, base+(distance+1)//2)
-            loot = list(ITEMS)[(self.search_count*5+index)%len(ITEMS)]
+            cap=min(5,1+self.xp//100+2)
+            difficulty=min(cap,base+min(1,distance//(3 if monster else 4)))
+            loot=list(AVAILABLE_ITEMS)[(self.search_count*5+index)%len(AVAILABLE_ITEMS)] if monster else None
+            xp=20*difficulty if monster else 8+4*difficulty
+            gold=8*difficulty if monster else 3+2*difficulty+min(distance,3)
+            progress=12*difficulty if monster else 4+2*difficulty
+            method='Начать дуэль' if monster else 'Доставить документы' if index in (1,4) and city else 'Осмотреть следы' if branch=='Хитрость' else 'Изучить находки' if branch=='Знания' else 'Провести переговоры'
             self.offers.append(Quest(f'{self.search_count}-{index}',title,description,difficulty,branch,
-                                     self.hero.region,target,city,monster,difficulty*30,difficulty*12,
-                                     difficulty*20,loot,distance,tier,self.in_city))
+                                     self.hero.region,target,city,monster,xp,gold,progress,loot,
+                                     distance,tier,self.in_city,method))
         self.record(f'Поиск заданий: {self.hero.region}, '+('город' if self.in_city else 'регион')+'. Найдено пять поручений.')
+        self.maybe_event('Поиск поручений')
 
     def accept(self, quest_id):
         self.ensure_free()
@@ -180,21 +199,16 @@ class Adventure(BattleRules, Game):
         self.reward(quest, 'Мирное поручение выполнено. ')
 
     def reward(self, quest, prefix):
-        self.xp += quest.xp
-        self.hero.gold += quest.gold
-        branch = quest.branch
-        self.branch_xp[branch] += quest.progress
-        while self.hero.branches[branch] < 3 and self.branch_xp[branch] >= 60:
-            self.branch_xp[branch] -= 60
-            self.hero.branches[branch] += 1
-        if self.hero.branches[branch] == 3:
-            self.branch_xp[branch] = 0
-        if quest.loot not in self.bag:
-            self.bag.append(quest.loot)
+        previous_level=self.xp//100
+        self.xp+=quest.xp
+        self.level_points+=self.xp//100-previous_level
+        self.hero.gold+=quest.gold
+        self.gain_branch(quest.branch,quest.progress)
+        if quest.loot and quest.loot not in self.bag:self.bag.append(quest.loot)
         self.active.remove(quest)
         self.completed.append(quest.id)
-        self.record(prefix + f'«{quest.title}»: +{quest.xp} опыта, +{quest.gold} золота, '
-                    f'+{quest.progress} к ветви «{branch}», предмет: {quest.loot}.')
+        self.repute(REGIONS[quest.target].country,2 if quest.monster else 1,3 if quest.monster else 1)
+        self.record(prefix+f'«{quest.title}»: +{quest.xp} опыта, +{quest.gold} золота, +{quest.progress} к ветви «{quest.branch}».'+(f' Предмет: {quest.loot}.' if quest.loot else ''))
 
     def abandon(self, quest_id):
         self.ensure_free()
@@ -219,83 +233,101 @@ class Adventure(BattleRules, Game):
         self.hp = min(self.hp, stats(self.hero)["hp"])
 
     def save(self, path=SAVE):
-        data = {'version': 3, 'hero': asdict(self.hero), 'turn': self.turn,
+        data = {'version': 4, 'hero': asdict(self.hero), 'turn': self.turn,
                 'in_city': self.in_city, 'wars': sorted(self.wars), 'journal': self.journal,
                 'xp': self.xp, 'branch_xp': self.branch_xp, 'bag': self.bag,
                 'offers': [asdict(q) for q in self.offers], 'active': [asdict(q) for q in self.active],
                 'completed': self.completed, 'search_count': self.search_count,
                 'hp': self.hp, 'consumables': self.consumables, 'purchases': self.purchases,
-                'battle': self.battle}
+                'battle': self.battle,
+                'world': {k:getattr(self,k) for k in ('paths','selected_skills','level_points','reputation','fame','last_fame_event','event','event_serial','last_event_turn','last_event_check','preparation')}}
         path = Path(path)
         temp = path.with_suffix('.tmp')
         temp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
         temp.replace(path)
 
     @classmethod
-    def load(cls, path=SAVE):
-        # Версия 1 остаётся доступной через старый консольный запуск.
+    def load(cls,path=SAVE):
         try:
-            data = json.loads(Path(path).read_text(encoding='utf-8'))
-            h = data['hero']
-            if data['version'] not in (2,3):
-                raise ValueError('Неизвестная версия графического сохранения.')
-            item = next((x for x in h['equipment'].values() if x), 'Учебный меч')
-            game = cls.create(h['name'], h['gender'], h['race'], h['background'], item, h['region'])
-            def natural(v):
-                return type(v) is int and v >= 0
-            if (not natural(data['xp']) or not natural(data['search_count'])
-                or not natural(h['gold']) or not natural(data['turn']) or data['turn'] < 1
-                or type(data['in_city']) is not bool
-                or set(h['branches']) != set(BRANCHES)
-                or any(type(x) is not int or not 0 <= x <= 3 for x in h['branches'].values())
-                or set(data['branch_xp']) != set(BRANCHES)
-                or any(not natural(x) or x >= 60 for x in data['branch_xp'].values())
-                or not isinstance(data['bag'], list) or any(x not in ITEMS for x in data['bag'])
-                or set(h['equipment']) != {'Оружие', 'Доспех', 'Артефакт'}
-                or any(x is not None and (x not in data['bag'] or ITEMS[x][0] != slot)
-                       for slot, x in h['equipment'].items())
-                or not isinstance(data['journal'], list) or not all(isinstance(x, str) for x in data['journal'])
-                or not isinstance(data['completed'], list) or not all(isinstance(x, str) for x in data['completed'])):
+            data=json.loads(Path(path).read_text(encoding='utf-8'))
+            version=data['version']
+            if version not in (2,3,4):raise ValueError('Неизвестная версия сохранения.')
+            h=data['hero']
+            h['equipment']={k:ALIASES.get(v,v) for k,v in h['equipment'].items()}
+            item=next((v for v in h['equipment'].values() if v),'Железный меч')
+            game=cls.create(h['name'],h['gender'],h['race'],h['background'],item,h['region'])
+            def natural(v):return type(v) is int and v>=0
+            if (set(h['branches'])!=set(BRANCHES) or any(type(v) is not int or not 0<=v<=4 for v in h['branches'].values())
+                or not natural(h['gold']) or set(h['equipment'])!={'Оружие','Доспех','Артефакт'}
+                or not natural(data['xp']) or not natural(data['turn']) or data['turn']<1
+                or not natural(data['search_count']) or type(data['in_city']) is not bool
+                or set(data['branch_xp'])!=set(BRANCHES) or any(not natural(v) for v in data['branch_xp'].values())
+                or not isinstance(data['bag'],list) or any(x not in ITEMS for x in data['bag'])
+                or not isinstance(data['journal'],list) or not all(isinstance(x,str) for x in data['journal'])
+                or not isinstance(data['completed'],list) or not all(isinstance(x,str) for x in data['completed'])):
                 raise ValueError('Некорректное сохранение.')
-            for key in ('offers', 'active'):
-                quests = [Quest(**q) for q in data[key]]
-                for q in quests:
-                    if q.monster and q.monster_tier==0:
-                        q.monster_tier = monster_tier(q.monster) or next((t for t, names in MONSTERS.items() if q.monster in [n for n,_ in names]), 1)
-                for q in quests:
-                    if (type(q.difficulty) is not int or not 1 <= q.difficulty <= 5
-                        or q.branch not in BRANCHES or q.target not in REGIONS or REGIONS[q.target].blocked
-                        or q.origin not in REGIONS or q.loot not in ITEMS or type(q.city) is not bool
-                        or any(not natural(x) for x in (q.xp, q.gold, q.progress))
-                        or not all(isinstance(x, str) for x in (q.id, q.title, q.description))
-                        or type(q.distance) is not int or q.distance<0 or type(q.origin_city) is not bool
-                        or type(q.monster_tier) is not int or not 0<=q.monster_tier<=5
-                        or (q.monster is not None and (q.monster_tier<1 or
-                            (monster_tier(q.monster) is None and not any(q.monster==n for names in MONSTERS.values() for n,_ in names))))):
-                        raise ValueError('Некорректное задание.')
-                setattr(game, key, quests)
-            ids = [q.id for q in game.offers + game.active] + data['completed']
-            if len(game.active) > 3 or len(game.offers) > 5 or len(ids) != len(set(ids)):
-                raise ValueError('Повторяющиеся задания в сохранении.')
             from eterion import Hero
-            game.hero = Hero(**h)
-            for key in ('turn', 'in_city', 'journal', 'xp', 'branch_xp', 'bag', 'completed', 'search_count'):
-                setattr(game, key, data[key])
-            for a, b in data['wars']:
-                game.set_relation(a, b, True)
-            game.hp = stats(game.hero)['hp']
-            if data['version']==3:
-                if (not natural(data['hp']) or not 1<=data['hp']<=stats(game.hero)['hp']
+            game.hero=Hero(**h)
+            for key in ('turn','in_city','journal','xp','branch_xp','completed','search_count'):setattr(game,key,data[key])
+            game.bag=list(dict.fromkeys(ALIASES.get(x,x) for x in data['bag']))
+            if any(v is not None and (v not in game.bag or ITEMS[v][0]!=slot) for slot,v in h['equipment'].items()):
+                raise ValueError('Некорректное снаряжение.')
+            for key in ('offers','active'):
+                quests=[Quest(**q) for q in data[key]]
+                for q in quests:
+                    q.loot=ALIASES.get(q.loot,q.loot)
+                    if q.monster and q.monster_tier==0:
+                        q.monster_tier=monster_tier(q.monster) or next((t for t,names in MONSTERS.items() if q.monster in [n for n,_ in names]),1)
+                    if (type(q.difficulty) is not int or not 1<=q.difficulty<=5 or q.branch not in BRANCHES
+                        or q.target not in REGIONS or REGIONS[q.target].blocked or q.origin not in REGIONS
+                        or (q.loot is not None and q.loot not in AVAILABLE_ITEMS) or type(q.city) is not bool
+                        or type(q.origin_city) is not bool or not natural(q.distance)
+                        or any(not natural(v) for v in (q.xp,q.gold,q.progress,q.monster_tier))
+                        or not all(isinstance(v,str) for v in (q.id,q.title,q.description,q.method))
+                        or q.monster_tier>5 or (q.monster is not None and (q.monster_tier<1 or
+                           (monster_tier(q.monster) is None and not any(q.monster==n for names in MONSTERS.values() for n,_ in names))))):
+                        raise ValueError('Некорректное задание.')
+                setattr(game,key,quests)
+            ids=[q.id for q in game.offers+game.active]+game.completed
+            if len(game.active)>3 or len(game.offers)>5 or len(ids)!=len(set(ids)):raise ValueError('Некорректное число заданий.')
+            for a,b in data['wars']:game.set_relation(a,b,True)
+            if version==4:
+                world=data['world']
+                if (set(world['paths'])!=set(BRANCHES) or any(v not in (None,'left','right') for v in world['paths'].values())
+                    or not isinstance(world['selected_skills'],list) or len(world['selected_skills'])>3
+                    or len(world['selected_skills'])!=len(set(world['selected_skills']))
+                    or not natural(world['level_points']) or world['level_points']>game.xp//100):
+                    raise ValueError('Некорректное дерево навыков.')
+                for field,low,high in [('reputation',-100,100),('fame',0,1000),('last_fame_event',1,game.turn)]:
+                    from eterion import COUNTRIES
+                    if set(world[field])!=set(COUNTRIES) or any(type(v) is not int or not low<=v<=high for v in world[field].values()):
+                        raise ValueError('Некорректная репутация или известность.')
+                for key in ('paths','selected_skills','level_points','reputation','fame','last_fame_event','event','event_serial','last_event_turn','last_event_check','preparation'):
+                    setattr(game,key,world[key])
+                game.sync_skills()
+                if any(s not in unlocked(game.hero) for s in game.selected_skills):raise ValueError('Выбран закрытый навык.')
+                if any(game.hero.branches[k]>2 and not game.paths[k] for k in BRANCHES):raise ValueError('Не выбран путь ветви.')
+            else:
+                game.paths={k:'left' if v>2 else None for k,v in game.hero.branches.items()}
+                game.sync_skills()
+                game.selected_skills=unlocked(game.hero)[:3]
+                game.sync_skills()
+            game.hp=stats(game.hero)['hp']
+            if version>=3:
+                if (not natural(data['hp']) or data['hp']<1 or data['hp']>200
                     or not isinstance(data['consumables'],dict) or not isinstance(data['purchases'],dict)
                     or any(k not in CONSUMABLES or not natural(v) or v<1 for k,v in data['consumables'].items())
                     or sum(data['consumables'].values())>15
                     or any(not isinstance(k,str) or not natural(v) or v>3 for k,v in data['purchases'].items())):
                     raise ValueError('Некорректное здоровье или расходуемые карты.')
-                for key in ('hp','consumables','purchases','battle'):
-                    setattr(game,key,data[key])
-                if game.battle is not None and not isinstance(game.battle,dict):
-                    raise ValueError('Некорректная дуэль.')
-                game.validate_battle()
+                game.hp=min(data['hp'],stats(game.hero)['hp'])
+                game.consumables=data['consumables'];game.purchases=data['purchases'];game.battle=data['battle']
+                if game.battle is not None:
+                    if not isinstance(game.battle,dict):raise ValueError('Некорректная дуэль.')
+                    if version<4:
+                        game.battle['discard'].extend(game.battle['hand'][4:]);game.battle['hand']=game.battle['hand'][:4]
+                    game.validate_battle()
+            game.validate_world()
             return game
-        except (KeyError, TypeError, AttributeError) as exc:
-            raise ValueError('Повреждённый файл сохранения.') from exc
+        except (KeyError,TypeError,AttributeError) as exc:
+            raise ValueError('Повреждённое сохранение.') from exc

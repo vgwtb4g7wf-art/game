@@ -50,10 +50,12 @@ consumable('city:tonic','Аптекарский эликсир',10,cost=1,heal=2
 consumable('capital:seal','Свиток королевской защиты',15,cost=1,block=22,heal=5)
 
 
-def tavern(region, in_city):
+def tavern(region, in_city, cycle=0):
     r = REGIONS[region]
     kind = 'Столичная таверна' if in_city and r.capital else 'Городская таверна' if in_city else 'Дорожная таверна'
-    keys = ['supply:heal', COUNTRY_CARDS[r.country], REGION_CARDS[region]]
+    keys = ['supply:heal', COUNTRY_CARDS[r.country]]
+    if cycle%2==0:keys.append(REGION_CARDS[region])
+    else:keys.append('supply:smoke')
     if in_city:
         keys += ['supply:smoke', 'city:tonic']
         if r.capital:

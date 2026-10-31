@@ -12,10 +12,13 @@ from combat import CARDS
 
 
 def create():
-    return Adventure.create('Эрин', 'Женский', 'Человек', 'Торговец', 'Учебный меч', 'Глыба', 'Знания')
+    game=Adventure.create('Эрин','Женский','Человек','Торговец','Железный меч','Глыба','Знания')
+    game.maybe_event=lambda context:None
+    return game
 
 
 def resolve(game):
+    if game.preparation:game.begin_battle({})
     for _ in range(100):
         if game.battle is None:
             return
@@ -37,7 +40,7 @@ class AdventureTests(unittest.TestCase):
         self.assertTrue(all(1<=q.difficulty<=5 for q in game.offers))
         for q in game.offers:
             if q.monster:
-                self.assertEqual(q.difficulty,min(5,q.monster_tier+(q.distance+1)//2))
+                self.assertEqual(q.difficulty,min(3,q.monster_tier+min(1,q.distance//3)))
         self.assertTrue(any(q.target == game.hero.region for q in game.offers))
         self.assertTrue(any(q.target != game.hero.region for q in game.offers))
         self.assertTrue(any(q.monster for q in game.offers))
@@ -52,17 +55,17 @@ class AdventureTests(unittest.TestCase):
         self.assertEqual(game.turn, 2)
         game.complete(q.id)
         self.assertEqual(game.xp,0)
-        self.assertIsNotNone(game.battle)
+        self.assertIsNotNone(game.preparation)
         resolve(game)
         self.assertEqual(game.turn, 3)
-        self.assertEqual(game.xp, 30)
-        self.assertEqual(game.hero.gold, 52)
-        self.assertEqual(game.branch_xp['Мощь'], 20)
+        self.assertEqual(game.xp, 20)
+        self.assertEqual(game.hero.gold, 48)
+        self.assertEqual(game.branch_xp['Мощь'], 12)
         self.assertIn(q.loot, game.bag)
         self.assertIn('Победа в карточной дуэли', game.journal[-1])
         with self.assertRaises(ValueError):
             game.complete(q.id)
-        self.assertEqual(game.xp, 30)
+        self.assertEqual(game.xp, 20)
 
     def test_remote_city_quest_and_branch_unlock(self):
         game = create()
@@ -82,7 +85,7 @@ class AdventureTests(unittest.TestCase):
         game.enter_city()
         branch_before = game.hero.branches[q.branch]
         game.complete(q.id)
-        self.assertEqual(game.hero.branches[q.branch], min(3, branch_before + q.progress // 60))
+        self.assertEqual(game.hero.branches[q.branch], branch_before)
         self.assertGreater(game.xp, 0)
 
     def test_limit_abandon_and_refresh(self):
@@ -115,7 +118,7 @@ class AdventureTests(unittest.TestCase):
         game.equip('Кольчуга')
         game.equip('Боевой топор')
         self.assertEqual(game.hero.equipment['Доспех'], 'Кольчуга')
-        self.assertIn('Учебный меч', game.bag)
+        self.assertIn('Железный меч', game.bag)
         self.assertEqual(game.hero.equipment['Оружие'], 'Боевой топор')
         game.unequip('Оружие')
         self.assertIsNone(game.hero.equipment['Оружие'])
@@ -168,12 +171,13 @@ class ServerTests(unittest.TestCase):
                 with self.assertRaises(HTTPError):
                     post('search')
                 h = dict(name='Эрин', gender='Женский', race='Человек', background='Торговец',
-                         item='Учебный меч', region='Глыба', human_branch='Знания')
+                         item='Железный меч', region='Глыба', human_branch='Знания')
                 post('create', hero=h)
                 board = post('search')
                 post('accept', id=board['offers'][0]['id'])
                 done = post('complete', id=board['offers'][0]['id'])
-                self.assertIsNotNone(done['battle'])
+                self.assertIsNotNone(done['preparation'])
+                done=post('begin_battle',chosen={})
                 for _ in range(100):
                     if done['battle'] is None:
                         break
@@ -184,7 +188,7 @@ class ServerTests(unittest.TestCase):
                         done=post('play',index=index)
                     else:
                         done=post('end_round')
-                self.assertEqual(done['xp'], 30)
+                self.assertEqual(done['xp'], 20)
                 post('save')
                 post('move', target='Бреннор')
                 restored = post('load')
