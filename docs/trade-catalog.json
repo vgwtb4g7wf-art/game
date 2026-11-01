@@ -1,0 +1,2155 @@
+{
+  "gear": [
+    {
+      "name": "Железный меч",
+      "slot": "Оружие",
+      "price": 40,
+      "description": "Прямой клинок городской стражи.",
+      "properties": {
+        "cards": [
+          "weapon:sword:cut",
+          "weapon:sword:parry"
+        ],
+        "hp": 0,
+        "armor": 0,
+        "hit": 0
+      },
+      "alignment": "neutral",
+      "black": false,
+      "rare": false,
+      "passive": ""
+    },
+    {
+      "name": "Короткий кинжал",
+      "slot": "Оружие",
+      "price": 35,
+      "description": "Неприметный клинок разведчика.",
+      "properties": {
+        "cards": [
+          "weapon:dagger",
+          "weapon:dagger"
+        ],
+        "hp": 0,
+        "armor": 0,
+        "hit": 0
+      },
+      "alignment": "neutral",
+      "black": false,
+      "rare": false,
+      "passive": ""
+    },
+    {
+      "name": "Дорожный лук",
+      "slot": "Оружие",
+      "price": 45,
+      "description": "Лёгкий лук лесных следопытов.",
+      "properties": {
+        "cards": [
+          "weapon:bow:shot",
+          "weapon:bow:roll"
+        ],
+        "hp": 0,
+        "armor": 0,
+        "hit": 0
+      },
+      "alignment": "neutral",
+      "black": false,
+      "rare": false,
+      "passive": ""
+    },
+    {
+      "name": "Кожаная куртка",
+      "slot": "Доспех",
+      "price": 25,
+      "description": "Лёгкая защита для дороги.",
+      "properties": {
+        "cards": [],
+        "hp": 0,
+        "armor": 4,
+        "hit": 0
+      },
+      "alignment": "neutral",
+      "black": false,
+      "rare": false,
+      "passive": ""
+    },
+    {
+      "name": "Кольчуга",
+      "slot": "Доспех",
+      "price": 50,
+      "description": "Переплетённые стальные кольца.",
+      "properties": {
+        "cards": [],
+        "hp": 0,
+        "armor": 8,
+        "hit": -5
+      },
+      "alignment": "neutral",
+      "black": false,
+      "rare": false,
+      "passive": ""
+    },
+    {
+      "name": "Кольцо янтаря",
+      "slot": "Артефакт",
+      "price": 30,
+      "description": "Внутри янтаря застыла золотая искра.",
+      "properties": {
+        "cards": [
+          "artifact:ring"
+        ],
+        "hp": 0,
+        "armor": 0,
+        "hit": 0
+      },
+      "alignment": "neutral",
+      "black": false,
+      "rare": false,
+      "passive": ""
+    },
+    {
+      "name": "Медный амулет",
+      "slot": "Артефакт",
+      "price": 35,
+      "description": "Простой медный амулет с тёплым камнем.",
+      "properties": {
+        "cards": [
+          "artifact:amulet"
+        ],
+        "hp": 0,
+        "armor": 0,
+        "hit": 0
+      },
+      "alignment": "neutral",
+      "black": false,
+      "rare": false,
+      "passive": ""
+    },
+    {
+      "name": "Амулет теневого договора",
+      "slot": "Артефакт",
+      "price": 55,
+      "description": "Чёрный рынок: 6 блока и лечение 2, один раз за бой.",
+      "properties": {
+        "cards": [
+          "artifact:shadow"
+        ],
+        "hp": 0,
+        "armor": 0,
+        "hit": 0
+      },
+      "alignment": "neutral",
+      "black": true,
+      "rare": false,
+      "passive": ""
+    },
+    {
+      "name": "Дуэльная шпага",
+      "slot": "Оружие",
+      "price": 55,
+      "description": "Меч: точность и защита вместо тяжёлого удара.",
+      "properties": {
+        "cards": [
+          "gear:rapier:thrust",
+          "gear:rapier:parry"
+        ],
+        "hp": 0,
+        "armor": 0,
+        "hit": 0,
+        "passives": {}
+      },
+      "alignment": "neutral",
+      "black": false,
+      "rare": false,
+      "passive": ""
+    },
+    {
+      "name": "Охотничий длинный лук",
+      "slot": "Оружие",
+      "price": 60,
+      "description": "Лук: более сильный выстрел, меньше блока.",
+      "properties": {
+        "cards": [
+          "gear:longbow:shot",
+          "gear:longbow:step"
+        ],
+        "hp": 0,
+        "armor": 0,
+        "hit": 0,
+        "passives": {}
+      },
+      "alignment": "neutral",
+      "black": false,
+      "rare": false,
+      "passive": ""
+    },
+    {
+      "name": "Стёганая куртка путника",
+      "slot": "Доспех",
+      "price": 20,
+      "description": "Недорогой доспех: 3 брони.",
+      "properties": {
+        "cards": [],
+        "hp": 0,
+        "armor": 3,
+        "hit": 0,
+        "passives": {}
+      },
+      "alignment": "neutral",
+      "black": false,
+      "rare": false,
+      "passive": ""
+    },
+    {
+      "name": "Бригантина",
+      "slot": "Доспех",
+      "price": 65,
+      "description": "9 брони; −5% попадания.",
+      "properties": {
+        "cards": [],
+        "hp": 0,
+        "armor": 9,
+        "hit": -5,
+        "passives": {}
+      },
+      "alignment": "neutral",
+      "black": false,
+      "rare": false,
+      "passive": ""
+    },
+    {
+      "name": "Чешуйчатый панцирь",
+      "slot": "Доспех",
+      "price": 60,
+      "description": "7 брони без штрафа к попаданию.",
+      "properties": {
+        "cards": [],
+        "hp": 0,
+        "armor": 7,
+        "hit": 0,
+        "passives": {}
+      },
+      "alignment": "neutral",
+      "black": false,
+      "rare": false,
+      "passive": ""
+    },
+    {
+      "name": "Пластинчатый доспех",
+      "slot": "Доспех",
+      "price": 80,
+      "description": "11 брони; −10% попадания.",
+      "properties": {
+        "cards": [],
+        "hp": 0,
+        "armor": 11,
+        "hit": -10,
+        "passives": {}
+      },
+      "alignment": "neutral",
+      "black": false,
+      "rare": false,
+      "passive": ""
+    },
+    {
+      "name": "Мантия лекаря",
+      "slot": "Доспех",
+      "price": 55,
+      "description": "2 брони; все карты лечения сильнее на 25%.",
+      "properties": {
+        "cards": [],
+        "hp": 0,
+        "armor": 2,
+        "hit": 0,
+        "passives": {
+          "healing_bonus": 25
+        }
+      },
+      "alignment": "neutral",
+      "black": false,
+      "rare": true,
+      "passive": "2 брони; все карты лечения сильнее на 25%."
+    },
+    {
+      "name": "Печать каменного круга",
+      "slot": "Артефакт",
+      "price": 45,
+      "description": "Одна карта за 1 энергию, один раз за бой.",
+      "properties": {
+        "cards": [
+          "artifact:stone"
+        ],
+        "hp": 0,
+        "armor": 0,
+        "hit": 0,
+        "passives": {}
+      },
+      "alignment": "neutral",
+      "black": false,
+      "rare": false,
+      "passive": ""
+    },
+    {
+      "name": "Брошь полевого лекаря",
+      "slot": "Артефакт",
+      "price": 45,
+      "description": "Одна карта за 1 энергию, один раз за бой.",
+      "properties": {
+        "cards": [
+          "artifact:medic"
+        ],
+        "hp": 0,
+        "armor": 0,
+        "hit": 0,
+        "passives": {}
+      },
+      "alignment": "neutral",
+      "black": false,
+      "rare": false,
+      "passive": ""
+    },
+    {
+      "name": "Линза меткого взгляда",
+      "slot": "Артефакт",
+      "price": 55,
+      "description": "Одна карта за 1 энергию, один раз за бой.",
+      "properties": {
+        "cards": [
+          "artifact:lens"
+        ],
+        "hp": 0,
+        "armor": 0,
+        "hit": 0,
+        "passives": {}
+      },
+      "alignment": "neutral",
+      "black": false,
+      "rare": false,
+      "passive": ""
+    },
+    {
+      "name": "Талисман равновесия",
+      "slot": "Артефакт",
+      "price": 50,
+      "description": "Одна карта за 1 энергию, один раз за бой.",
+      "properties": {
+        "cards": [
+          "artifact:balance"
+        ],
+        "hp": 0,
+        "armor": 0,
+        "hit": 0,
+        "passives": {}
+      },
+      "alignment": "neutral",
+      "black": false,
+      "rare": false,
+      "passive": ""
+    },
+    {
+      "name": "Меч верного слова",
+      "slot": "Оружие",
+      "price": 85,
+      "description": "Меч; постоянно +2 HP.",
+      "properties": {
+        "cards": [
+          "weapon:sword:cut",
+          "weapon:sword:parry"
+        ],
+        "hp": 0,
+        "armor": 0,
+        "hit": 0,
+        "passives": {
+          "hp": 2
+        }
+      },
+      "alignment": "good",
+      "black": false,
+      "rare": true,
+      "passive": "Меч; постоянно +2 HP."
+    },
+    {
+      "name": "Кинжал ночного дозора",
+      "slot": "Оружие",
+      "price": 85,
+      "description": "Кинжал; +3% шанса крита.",
+      "properties": {
+        "cards": [
+          "weapon:dagger",
+          "weapon:dagger"
+        ],
+        "hp": 0,
+        "armor": 0,
+        "hit": 0,
+        "passives": {
+          "crit_chance": 3
+        }
+      },
+      "alignment": "bad",
+      "black": false,
+      "rare": true,
+      "passive": "Кинжал; +3% шанса крита."
+    },
+    {
+      "name": "Кольчуга рубежа",
+      "slot": "Доспех",
+      "price": 95,
+      "description": "Кольчуга; +2 HP, −5% попадания.",
+      "properties": {
+        "cards": [],
+        "hp": 0,
+        "armor": 8,
+        "hit": -5,
+        "passives": {
+          "hp": 2
+        }
+      },
+      "alignment": "neutral",
+      "black": false,
+      "rare": true,
+      "passive": "Кольчуга; +2 HP, −5% попадания."
+    },
+    {
+      "name": "Амулет ясной памяти",
+      "slot": "Артефакт",
+      "price": 85,
+      "description": "Амулет: блок 8 раз за бой, постоянно +5% попадания.",
+      "properties": {
+        "cards": [
+          "artifact:amulet"
+        ],
+        "hp": 0,
+        "armor": 0,
+        "hit": 0,
+        "passives": {
+          "hit": 5
+        }
+      },
+      "alignment": "good",
+      "black": false,
+      "rare": true,
+      "passive": "Амулет: блок 8 раз за бой, постоянно +5% попадания."
+    },
+    {
+      "name": "Кинжал контрабандиста",
+      "slot": "Оружие",
+      "price": 90,
+      "description": "Кинжал: +5% попадания.",
+      "properties": {
+        "cards": [
+          "weapon:dagger",
+          "weapon:dagger"
+        ],
+        "hp": 0,
+        "armor": 0,
+        "hit": 0,
+        "passives": {
+          "hit": 5
+        }
+      },
+      "alignment": "neutral",
+      "black": true,
+      "rare": true,
+      "passive": "Кинжал: +5% попадания."
+    },
+    {
+      "name": "Панцирь сборщика долгов",
+      "slot": "Доспех",
+      "price": 90,
+      "description": "6 брони и +2 HP.",
+      "properties": {
+        "cards": [],
+        "hp": 0,
+        "armor": 6,
+        "hit": 0,
+        "passives": {
+          "hp": 2
+        }
+      },
+      "alignment": "bad",
+      "black": false,
+      "rare": true,
+      "passive": "6 брони и +2 HP."
+    },
+    {
+      "name": "Печать подпольного лекаря",
+      "slot": "Артефакт",
+      "price": 85,
+      "description": "Карта лечения 4 и блока 3; постоянно +25% лечения.",
+      "properties": {
+        "cards": [
+          "artifact:blackmedic"
+        ],
+        "hp": 0,
+        "armor": 0,
+        "hit": 0,
+        "passives": {
+          "healing_bonus": 25
+        }
+      },
+      "alignment": "neutral",
+      "black": true,
+      "rare": true,
+      "passive": "Карта лечения 4 и блока 3; постоянно +25% лечения."
+    }
+  ],
+  "supplies": [
+    {
+      "key": "common:tea",
+      "title": "Походный чай",
+      "price": 5,
+      "card": {
+        "id": "common:tea",
+        "name": "Походный чай",
+        "cost": 1,
+        "damage": 0,
+        "block": 1,
+        "heal": 3,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": null,
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "common:bandage",
+      "title": "Чистая повязка",
+      "price": 6,
+      "card": {
+        "id": "common:bandage",
+        "name": "Чистая повязка",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 4,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": null,
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "common:stone",
+      "title": "Пращный камень",
+      "price": 5,
+      "card": {
+        "id": "common:stone",
+        "name": "Пращный камень",
+        "cost": 1,
+        "damage": 3,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": null,
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "common:smoke",
+      "title": "Дорожная дымовая шашка",
+      "price": 7,
+      "card": {
+        "id": "common:smoke",
+        "name": "Дорожная дымовая шашка",
+        "cost": 0,
+        "damage": 0,
+        "block": 3,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": null,
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "common:salve",
+      "title": "Защитная мазь",
+      "price": 7,
+      "card": {
+        "id": "common:salve",
+        "name": "Защитная мазь",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 3,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": null,
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "town:tonic",
+      "title": "Тоник аптекаря",
+      "price": 10,
+      "card": {
+        "id": "town:tonic",
+        "name": "Тоник аптекаря",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 6,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": null,
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "town:shield",
+      "title": "Свиток городского заслона",
+      "price": 10,
+      "card": {
+        "id": "town:shield",
+        "name": "Свиток городского заслона",
+        "cost": 1,
+        "damage": 0,
+        "block": 6,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": null,
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "town:fire",
+      "title": "Алхимический огонь",
+      "price": 11,
+      "card": {
+        "id": "town:fire",
+        "name": "Алхимический огонь",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 175,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": null,
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "capital:elixir",
+      "title": "Придворный эликсир",
+      "price": 16,
+      "card": {
+        "id": "capital:elixir",
+        "name": "Придворный эликсир",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 8,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 2,
+      "country": null,
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "capital:seal",
+      "title": "Печать столичной гильдии",
+      "price": 16,
+      "card": {
+        "id": "capital:seal",
+        "name": "Печать столичной гильдии",
+        "cost": 1,
+        "damage": 0,
+        "block": 6,
+        "heal": 2,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 2,
+      "country": null,
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:0:0",
+      "title": "Шахтёрский отвар",
+      "price": 6,
+      "card": {
+        "id": "local:0:0",
+        "name": "Шахтёрский отвар",
+        "cost": 1,
+        "damage": 0,
+        "block": 1,
+        "heal": 3,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Дваллинхорг",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:0:1",
+      "title": "Кварцевая пыль",
+      "price": 7,
+      "card": {
+        "id": "local:0:1",
+        "name": "Кварцевая пыль",
+        "cost": 0,
+        "damage": 0,
+        "block": 3,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Дваллинхорг",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:0:2",
+      "title": "Кузнечная накладка",
+      "price": 7,
+      "card": {
+        "id": "local:0:2",
+        "name": "Кузнечная накладка",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 3,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Дваллинхорг",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:0:3",
+      "title": "Рунный пластырь",
+      "price": 11,
+      "card": {
+        "id": "local:0:3",
+        "name": "Рунный пластырь",
+        "cost": 1,
+        "damage": 0,
+        "block": 1,
+        "heal": 5,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": "Дваллинхорг",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:0:4",
+      "title": "Огненная стружка",
+      "price": 12,
+      "card": {
+        "id": "local:0:4",
+        "name": "Огненная стружка",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 175,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": "Дваллинхорг",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:0:5",
+      "title": "Печать Бронзового Пика",
+      "price": 17,
+      "card": {
+        "id": "local:0:5",
+        "name": "Печать Бронзового Пика",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 3,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 4,
+        "consumable": true
+      },
+      "tier": 2,
+      "country": "Дваллинхорг",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:1:0",
+      "title": "Северный чай",
+      "price": 6,
+      "card": {
+        "id": "local:1:0",
+        "name": "Северный чай",
+        "cost": 1,
+        "damage": 0,
+        "block": 1,
+        "heal": 3,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Княжество Бреннор",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:1:1",
+      "title": "Инейный порошок",
+      "price": 7,
+      "card": {
+        "id": "local:1:1",
+        "name": "Инейный порошок",
+        "cost": 0,
+        "damage": 0,
+        "block": 3,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Княжество Бреннор",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:1:2",
+      "title": "Шерстяная перевязь",
+      "price": 7,
+      "card": {
+        "id": "local:1:2",
+        "name": "Шерстяная перевязь",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 3,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Княжество Бреннор",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:1:3",
+      "title": "Бреннорский настой",
+      "price": 11,
+      "card": {
+        "id": "local:1:3",
+        "name": "Бреннорский настой",
+        "cost": 1,
+        "damage": 0,
+        "block": 1,
+        "heal": 5,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": "Княжество Бреннор",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:1:4",
+      "title": "Ледяной осколок",
+      "price": 12,
+      "card": {
+        "id": "local:1:4",
+        "name": "Ледяной осколок",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 175,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": "Княжество Бреннор",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:1:5",
+      "title": "Свиток княжеской стражи",
+      "price": 17,
+      "card": {
+        "id": "local:1:5",
+        "name": "Свиток княжеской стражи",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 3,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 4,
+        "consumable": true
+      },
+      "tier": 2,
+      "country": "Княжество Бреннор",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:2:0",
+      "title": "Соль прилива",
+      "price": 6,
+      "card": {
+        "id": "local:2:0",
+        "name": "Соль прилива",
+        "cost": 1,
+        "damage": 0,
+        "block": 1,
+        "heal": 3,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Азалтир",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:2:1",
+      "title": "Коралловая крошка",
+      "price": 7,
+      "card": {
+        "id": "local:2:1",
+        "name": "Коралловая крошка",
+        "cost": 0,
+        "damage": 0,
+        "block": 3,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Азалтир",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:2:2",
+      "title": "Морская перевязь",
+      "price": 7,
+      "card": {
+        "id": "local:2:2",
+        "name": "Морская перевязь",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 3,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Азалтир",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:2:3",
+      "title": "Эликсир жемчужниц",
+      "price": 11,
+      "card": {
+        "id": "local:2:3",
+        "name": "Эликсир жемчужниц",
+        "cost": 1,
+        "damage": 0,
+        "block": 1,
+        "heal": 5,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": "Азалтир",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:2:4",
+      "title": "Кристальный заряд",
+      "price": 12,
+      "card": {
+        "id": "local:2:4",
+        "name": "Кристальный заряд",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 175,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": "Азалтир",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:2:5",
+      "title": "Печать островного совета",
+      "price": 17,
+      "card": {
+        "id": "local:2:5",
+        "name": "Печать островного совета",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 3,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 4,
+        "consumable": true
+      },
+      "tier": 2,
+      "country": "Азалтир",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:3:0",
+      "title": "Лесной сбор",
+      "price": 6,
+      "card": {
+        "id": "local:3:0",
+        "name": "Лесной сбор",
+        "cost": 1,
+        "damage": 0,
+        "block": 1,
+        "heal": 3,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Лесное царство Талласа",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:3:1",
+      "title": "Терновая пыль",
+      "price": 7,
+      "card": {
+        "id": "local:3:1",
+        "name": "Терновая пыль",
+        "cost": 0,
+        "damage": 0,
+        "block": 3,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Лесное царство Талласа",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:3:2",
+      "title": "Моховой компресс",
+      "price": 7,
+      "card": {
+        "id": "local:3:2",
+        "name": "Моховой компресс",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 3,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Лесное царство Талласа",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:3:3",
+      "title": "Сок священной рощи",
+      "price": 11,
+      "card": {
+        "id": "local:3:3",
+        "name": "Сок священной рощи",
+        "cost": 1,
+        "damage": 0,
+        "block": 1,
+        "heal": 5,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": "Лесное царство Талласа",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:3:4",
+      "title": "Капсула живицы",
+      "price": 12,
+      "card": {
+        "id": "local:3:4",
+        "name": "Капсула живицы",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 175,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": "Лесное царство Талласа",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:3:5",
+      "title": "Лист королевского древа",
+      "price": 17,
+      "card": {
+        "id": "local:3:5",
+        "name": "Лист королевского древа",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 3,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 4,
+        "consumable": true
+      },
+      "tier": 2,
+      "country": "Лесное царство Талласа",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:4:0",
+      "title": "Полевой отвар",
+      "price": 6,
+      "card": {
+        "id": "local:4:0",
+        "name": "Полевой отвар",
+        "cost": 1,
+        "damage": 0,
+        "block": 1,
+        "heal": 3,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Тротенфорская империя",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:4:1",
+      "title": "Имперский порох",
+      "price": 7,
+      "card": {
+        "id": "local:4:1",
+        "name": "Имперский порох",
+        "cost": 0,
+        "damage": 0,
+        "block": 3,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Тротенфорская империя",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:4:2",
+      "title": "Солдатский бинт",
+      "price": 7,
+      "card": {
+        "id": "local:4:2",
+        "name": "Солдатский бинт",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 3,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Тротенфорская империя",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:4:3",
+      "title": "Гильдейский эликсир",
+      "price": 11,
+      "card": {
+        "id": "local:4:3",
+        "name": "Гильдейский эликсир",
+        "cost": 1,
+        "damage": 0,
+        "block": 1,
+        "heal": 5,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": "Тротенфорская империя",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:4:4",
+      "title": "Сигнальная ракета",
+      "price": 12,
+      "card": {
+        "id": "local:4:4",
+        "name": "Сигнальная ракета",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 175,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": "Тротенфорская империя",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:4:5",
+      "title": "Указ столичного лекаря",
+      "price": 17,
+      "card": {
+        "id": "local:4:5",
+        "name": "Указ столичного лекаря",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 3,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 4,
+        "consumable": true
+      },
+      "tier": 2,
+      "country": "Тротенфорская империя",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:5:0",
+      "title": "Оазисный напиток",
+      "price": 6,
+      "card": {
+        "id": "local:5:0",
+        "name": "Оазисный напиток",
+        "cost": 1,
+        "damage": 0,
+        "block": 1,
+        "heal": 3,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Королевство Алдория",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:5:1",
+      "title": "Пыль барханов",
+      "price": 7,
+      "card": {
+        "id": "local:5:1",
+        "name": "Пыль барханов",
+        "cost": 0,
+        "damage": 0,
+        "block": 3,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Королевство Алдория",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:5:2",
+      "title": "Полотно караванщика",
+      "price": 7,
+      "card": {
+        "id": "local:5:2",
+        "name": "Полотно караванщика",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 3,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Королевство Алдория",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:5:3",
+      "title": "Сироп финиковой пальмы",
+      "price": 11,
+      "card": {
+        "id": "local:5:3",
+        "name": "Сироп финиковой пальмы",
+        "cost": 1,
+        "damage": 0,
+        "block": 1,
+        "heal": 5,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": "Королевство Алдория",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:5:4",
+      "title": "Стеклянный снаряд",
+      "price": 12,
+      "card": {
+        "id": "local:5:4",
+        "name": "Стеклянный снаряд",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 175,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": "Королевство Алдория",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:5:5",
+      "title": "Печать золотого дворца",
+      "price": 17,
+      "card": {
+        "id": "local:5:5",
+        "name": "Печать золотого дворца",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 3,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 4,
+        "consumable": true
+      },
+      "tier": 2,
+      "country": "Королевство Алдория",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:6:0",
+      "title": "Горький болотный настой",
+      "price": 6,
+      "card": {
+        "id": "local:6:0",
+        "name": "Горький болотный настой",
+        "cost": 1,
+        "damage": 0,
+        "block": 1,
+        "heal": 3,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Аграмор",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:6:1",
+      "title": "Топяная пыль",
+      "price": 7,
+      "card": {
+        "id": "local:6:1",
+        "name": "Топяная пыль",
+        "cost": 0,
+        "damage": 0,
+        "block": 3,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Аграмор",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:6:2",
+      "title": "Повязка пустоши",
+      "price": 7,
+      "card": {
+        "id": "local:6:2",
+        "name": "Повязка пустоши",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 3,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Аграмор",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:6:3",
+      "title": "Орочий тоник",
+      "price": 11,
+      "card": {
+        "id": "local:6:3",
+        "name": "Орочий тоник",
+        "cost": 1,
+        "damage": 0,
+        "block": 1,
+        "heal": 5,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": "Аграмор",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:6:4",
+      "title": "Колба гоблинского огня",
+      "price": 12,
+      "card": {
+        "id": "local:6:4",
+        "name": "Колба гоблинского огня",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 175,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": "Аграмор",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:6:5",
+      "title": "Знак военного шамана",
+      "price": 17,
+      "card": {
+        "id": "local:6:5",
+        "name": "Знак военного шамана",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 3,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 4,
+        "consumable": true
+      },
+      "tier": 2,
+      "country": "Аграмор",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:7:0",
+      "title": "Пепельный настой",
+      "price": 6,
+      "card": {
+        "id": "local:7:0",
+        "name": "Пепельный настой",
+        "cost": 1,
+        "damage": 0,
+        "block": 1,
+        "heal": 3,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Владычество Нархаз",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:7:1",
+      "title": "Серный порошок",
+      "price": 7,
+      "card": {
+        "id": "local:7:1",
+        "name": "Серный порошок",
+        "cost": 0,
+        "damage": 0,
+        "block": 3,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Владычество Нархаз",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:7:2",
+      "title": "Обугленная перевязь",
+      "price": 7,
+      "card": {
+        "id": "local:7:2",
+        "name": "Обугленная перевязь",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 3,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": "Владычество Нархаз",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:7:3",
+      "title": "Бальзам угольного сердца",
+      "price": 11,
+      "card": {
+        "id": "local:7:3",
+        "name": "Бальзам угольного сердца",
+        "cost": 1,
+        "damage": 0,
+        "block": 1,
+        "heal": 5,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": "Владычество Нархаз",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:7:4",
+      "title": "Искра горнила",
+      "price": 12,
+      "card": {
+        "id": "local:7:4",
+        "name": "Искра горнила",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 175,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": "Владычество Нархаз",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "local:7:5",
+      "title": "Печать пепельного трона",
+      "price": 17,
+      "card": {
+        "id": "local:7:5",
+        "name": "Печать пепельного трона",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 3,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 4,
+        "consumable": true
+      },
+      "tier": 2,
+      "country": "Владычество Нархаз",
+      "alignment": "neutral",
+      "black": false
+    },
+    {
+      "key": "rep:good:0",
+      "title": "Помощь общины",
+      "price": 7,
+      "card": {
+        "id": "rep:good:0",
+        "name": "Помощь общины",
+        "cost": 1,
+        "damage": 0,
+        "block": 3,
+        "heal": 2,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": null,
+      "alignment": "good",
+      "black": false
+    },
+    {
+      "key": "rep:good:1",
+      "title": "Освящённая повязка",
+      "price": 11,
+      "card": {
+        "id": "rep:good:1",
+        "name": "Освящённая повязка",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 6,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": null,
+      "alignment": "good",
+      "black": false
+    },
+    {
+      "key": "rep:good:2",
+      "title": "Свиток хранителя",
+      "price": 15,
+      "card": {
+        "id": "rep:good:2",
+        "name": "Свиток хранителя",
+        "cost": 1,
+        "damage": 0,
+        "block": 7,
+        "heal": 1,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": null,
+      "alignment": "good",
+      "black": false
+    },
+    {
+      "key": "rep:bad:0",
+      "title": "Тайный порошок",
+      "price": 7,
+      "card": {
+        "id": "rep:bad:0",
+        "name": "Тайный порошок",
+        "cost": 1,
+        "damage": 3,
+        "block": 2,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": null,
+      "alignment": "bad",
+      "black": false
+    },
+    {
+      "key": "rep:bad:1",
+      "title": "Настой наёмника",
+      "price": 11,
+      "card": {
+        "id": "rep:bad:1",
+        "name": "Настой наёмника",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 2,
+        "accuracy": 0,
+        "ratio": 150,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": null,
+      "alignment": "bad",
+      "black": false
+    },
+    {
+      "key": "rep:bad:2",
+      "title": "Свиток устрашения",
+      "price": 15,
+      "card": {
+        "id": "rep:bad:2",
+        "name": "Свиток устрашения",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 225,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": null,
+      "alignment": "bad",
+      "black": false
+    },
+    {
+      "key": "black:needle",
+      "title": "Игла подпольного охотника",
+      "price": 12,
+      "card": {
+        "id": "black:needle",
+        "name": "Игла подпольного охотника",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 5,
+        "ratio": 200,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": null,
+      "alignment": "neutral",
+      "black": true
+    },
+    {
+      "key": "black:powder",
+      "title": "Контрабандный порошок",
+      "price": 12,
+      "card": {
+        "id": "black:powder",
+        "name": "Контрабандный порошок",
+        "cost": 0,
+        "damage": 0,
+        "block": 4,
+        "heal": 1,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": null,
+      "alignment": "neutral",
+      "black": true
+    },
+    {
+      "key": "black:resin",
+      "title": "Ночная смола",
+      "price": 10,
+      "card": {
+        "id": "black:resin",
+        "name": "Ночная смола",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 4,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": null,
+      "alignment": "neutral",
+      "black": true
+    },
+    {
+      "key": "black:tincture",
+      "title": "Настой теневых переулков",
+      "price": 13,
+      "card": {
+        "id": "black:tincture",
+        "name": "Настой теневых переулков",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 6,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": null,
+      "alignment": "neutral",
+      "black": true
+    },
+    {
+      "key": "black:veil",
+      "title": "Завеса контрабандиста",
+      "price": 9,
+      "card": {
+        "id": "black:veil",
+        "name": "Завеса контрабандиста",
+        "cost": 0,
+        "damage": 0,
+        "block": 5,
+        "heal": 0,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": null,
+      "alignment": "bad",
+      "black": true
+    },
+    {
+      "key": "black:balm",
+      "title": "Нелегальный бальзам",
+      "price": 8,
+      "card": {
+        "id": "black:balm",
+        "name": "Нелегальный бальзам",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 5,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": null,
+      "alignment": "bad",
+      "black": true
+    },
+    {
+      "key": "black:blade",
+      "title": "Скрытый клинок",
+      "price": 10,
+      "card": {
+        "id": "black:blade",
+        "name": "Скрытый клинок",
+        "cost": 1,
+        "damage": 0,
+        "block": 0,
+        "heal": 0,
+        "accuracy": 5,
+        "ratio": 175,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 0,
+      "country": null,
+      "alignment": "bad",
+      "black": true
+    },
+    {
+      "key": "guild:kit",
+      "title": "Гильдейский резерв",
+      "price": 8,
+      "card": {
+        "id": "guild:kit",
+        "name": "Гильдейский резерв",
+        "cost": 1,
+        "damage": 0,
+        "block": 3,
+        "heal": 3,
+        "accuracy": 0,
+        "ratio": 0,
+        "once": false,
+        "bank": 0,
+        "armor": 0,
+        "consumable": true
+      },
+      "tier": 1,
+      "country": null,
+      "alignment": "neutral",
+      "black": false,
+      "guild": true
+    }
+  ]
+}

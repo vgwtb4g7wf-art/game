@@ -1,3 +1,4 @@
+from test_adventure import complete_quest
 import json
 from pathlib import Path
 import tempfile
@@ -33,26 +34,26 @@ class RevisionTests(unittest.TestCase):
                 game.search()
                 for q in game.offers:
                     if q.distance:found_remote=True
-                    self.assertEqual(q.difficulty,q.monster_tier if q.monster else 2 if city else 1)
-                    base=8*q.difficulty if q.monster else 3+2*q.difficulty
+                    self.assertEqual(q.difficulty,q.monster_tier if q.monster else 1 if __import__('narrative_content').PEACE_QUESTS[q.template]['delivery'] else 2)
+                    base=__import__('balance_rewards').hunt_reward(q.difficulty)['gold'] if q.monster else __import__('balance_rewards').peace_reward(__import__('narrative_content').PEACE_QUESTS[q.template]['delivery'],0)['gold']
                     bonus=0 if q.distance==0 else 1 if q.distance<=2 else 2 if q.distance<=5 else 3
                     self.assertEqual(q.gold,base+bonus)
         self.assertTrue(found_remote)
 
     def test_renowned_hero_enters_town_and_capital_for_free(self):
         game=create();country=REGIONS['Глыба'].country
-        game.reputation[country]=20;game.fame[country]=19
+        game.reputation=20;game.attitudes[country]=10;game.fame=19
         self.assertEqual(game.entry_fee(),5)
-        game.fame[country]=20
+        game.fame=20
         self.assertEqual(game.entry_fee(),0)
         game.hero.gold=0;turn=game.turn
         game.enter_city();self.assertEqual(game.hero.gold,0);self.assertEqual(game.turn,turn)
         game.move('Бреннор')
         self.assertEqual(game.entry_fee(),10)
-        game.fame[country]=50
+        game.fame=50
         self.assertEqual(game.entry_fee(),0)
         game.enter_city();self.assertEqual(game.hero.gold,0)
-        game.reputation[country]=19
+        game.reputation=19;game.attitudes[country]=9
         self.assertEqual(game.entry_fee(),10)
 
     def test_war_toll_is_explicit_atomic_and_interior_stays_free(self):
@@ -64,7 +65,7 @@ class RevisionTests(unittest.TestCase):
         with self.assertRaises(ValueError):game.move('Келебран')
         self.assertEqual(game.hero.gold,100);self.assertEqual(game.turn,1)
         game.move('Бреннор');game.move('Глыба');self.assertEqual(game.hero.gold,100)
-        game.reputation['Азалтир']=-30
+        game.reputation=-30
         game.move('Келебран','pay')
         self.assertEqual(game.hero.gold,15) # 60 военный пропуск + 25 за репутацию.
         game.move('Азалтир');self.assertEqual(game.hero.gold,15)
@@ -98,12 +99,12 @@ class RevisionTests(unittest.TestCase):
 
     def test_notifications_and_cancelled_quest_can_be_retaken(self):
         game=create();self.assertFalse(game.skills_notice())
-        game.gain_branch('Мощь',40)
+        game.gain_branch('Мощь',50)
         self.assertTrue(game.skills_notice());self.assertIn('Тяжёлый удар',game.skill_notices)
         game.search();q=next(q for q in game.offers if not q.monster and q.target==game.hero.region)
         game.accept(q.id);self.assertNotIn(q,game.offers)
         game.abandon(q.id);self.assertIn(q,game.offers);game.accept(q.id)
-        game.xp=95;game.complete(q.id)
+        game.xp=95;complete_quest(game,q.id)
         self.assertEqual(game.level_notice,2);self.assertTrue(state(game)['skills_notice'])
         self.assertEqual(game.level_points,1)
 

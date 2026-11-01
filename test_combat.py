@@ -19,7 +19,7 @@ class CombatTests(unittest.TestCase):
 
     def force_hit(self,game,operation):
         with patch.object(game,'roll') as rng:
-            rng.return_value.randint.return_value=1
+            rng.return_value.randint.return_value=50
             operation()
 
     def test_base_damage_and_cards(self):
@@ -46,12 +46,12 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(card_damage(CARDS['weapon:bow:shot'],game.hero),12)
         self.assertEqual(card_damage(CARDS['weapon:dagger'],game.hero),6)
 
-    def test_armor_only_gives_refillable_pool_and_chain_dodge_penalty(self):
+    def test_armor_only_gives_refillable_pool_and_chain_accuracy_penalty(self):
         game=create();game.bag+=['Кольчуга','Кожаная куртка']
         self.assertEqual(ITEM_POWER['Кожаная куртка']['cards'],[])
         game.equip('Кожаная куртка');self.assertEqual(stats(game.hero)['armor'],4)
         game.equip('Кольчуга');self.assertEqual(stats(game.hero)['armor'],8)
-        self.assertEqual(stats(game.hero)['dodge'],5)
+        self.assertNotIn('dodge',stats(game.hero));self.assertEqual(stats(game.hero)['hit'],85)
         self.assertEqual(stats(game.hero)['hp'],14)
         self.start(game);b=game.battle
         hp=game.hp;b['intent']='attack';b['intent_value']=10;b['block']=4
@@ -66,17 +66,18 @@ class CombatTests(unittest.TestCase):
     def test_passives_always_work_and_only_cards_are_selected(self):
         game=create();before=stats(game.hero)['hp']
         game.gain_branch('Мощь',sum(COSTS[:3]))
-        self.assertEqual(stats(game.hero)['hp'],before+2)
+        self.assertEqual(stats(game.hero)['hp'],before+6)
         self.assertEqual(game.hero.branches['Мощь'],3)
         with self.assertRaises(ValueError):game.select_skill('Закалка')
         with self.assertRaises(ValueError):game.select_skill('Тяжёлый удар')
         game.select_skill('Натиск')
         self.assertIn('skill:Натиск',[k for k,_ in deck(game.hero,{})])
-        game.select_skill('Натиск');self.assertEqual(stats(game.hero)['hp'],before+2)
+        game.select_skill('Натиск');self.assertEqual(stats(game.hero)['hp'],before+6)
         self.assertIn('strike:1',[k for k,_ in deck(game.hero,{})])
-        game.choose_path('Мощь','right');game.gain_branch('Мощь',sum(COSTS[3:]))
-        self.assertEqual(stats(game.hero)['damage'],6)
-        self.assertIn('strike:2',[k for k,_ in deck(game.hero,{})])
+        game.gain_branch('Мощь',COSTS[3]);game.choose_path('Мощь','right');game.gain_branch('Мощь',sum(COSTS[4:]))
+        self.assertEqual(stats(game.hero)['damage'],4)
+        self.assertEqual(card_damage(CARDS['strike:3'],game.hero),6)
+        self.assertIn('strike:3',[k for k,_ in deck(game.hero,{})])
 
     def test_combat_tree_shape_and_diplomacy_has_no_cards(self):
         for branch,t in TREES.items():
@@ -101,7 +102,7 @@ class CombatTests(unittest.TestCase):
     def test_miss_block_and_enemy_armor_are_consumed(self):
         game=self.start();b=game.battle;b['hand']=['strike'];enemy_hp=b['enemy_hp']
         with patch.object(game,'roll') as rng:
-            rng.return_value.randint.return_value=100;game.play_card(0)
+            rng.return_value.randint.return_value=5000;game.play_card(0)
         self.assertEqual(b['enemy_hp'],enemy_hp)
         b['hand']=['weapon:sword:cut'];b['enemy_block']=2;b['enemy_armor']=3
         self.force_hit(game,lambda:game.play_card(0))
@@ -121,7 +122,7 @@ class CombatTests(unittest.TestCase):
 
     def test_amulet_once_block_eight_and_consumable_separate(self):
         game=create();game.bag.append('Медный амулет');game.equip('Медный амулет')
-        game.buy('supply:heal');self.start(game,{'supply:heal':1});b=game.battle
+        game.consumables.update({'supply:heal':1});self.start(game,{'supply:heal':1});b=game.battle
         for key in ('artifact:amulet','supply:heal'):
             b['draw']=[k for k in b['draw'] if k!=key];b['hand']=[k for k in b['hand'] if k!=key]
         b['hand']=['artifact:amulet','supply:heal'];game.hp-=4
@@ -132,10 +133,10 @@ class CombatTests(unittest.TestCase):
 
     def test_flee_fails_quest_loses_fame_and_can_kill(self):
         game=self.start();b=game.battle;quest=game.active[0];country=__import__('eterion').REGIONS[quest.target].country
-        before=game.fame[country];damage=b['profile']['escape'];hp=game.hp
+        before=game.fame;damage=b['profile']['escape'];hp=game.hp
         game.flee();self.assertEqual(game.hp,hp-damage)
         self.assertIn(quest.id,game.failed);self.assertEqual(game.active,[])
-        self.assertEqual(game.fame[country],max(0,before-b['profile']['fame_loss']))
+        self.assertEqual(game.fame,max(0,before-b['profile']['fame_loss']))
         self.assertEqual(game.xp,0);self.assertEqual(game.turn,3)
         self.start(game);game.hp=1;game.battle['armor']=8;game.battle['block']=99
         game.flee();self.assertTrue(game.dead);self.assertEqual(game.hp,0)
@@ -146,8 +147,10 @@ class CombatTests(unittest.TestCase):
             self.assertTrue(loaded.dead);self.assertEqual(loaded.hp,0)
 
     def test_unplayed_consumable_survives_flee_and_rest_heals(self):
-        game=create();game.buy('supply:heal');self.start(game,{'supply:heal':1});game.flee()
-        self.assertEqual(game.consumables['supply:heal'],1);game.hp=1;game.wait();self.assertEqual(game.hp,7)
+        game=create();game.consumables.update({'supply:heal':1});self.start(game,{'supply:heal':1});game.flee()
+        self.assertEqual(game.consumables['supply:heal'],1);game.hp=1
+        with self.assertRaises(ValueError):game.wait()
+        game.pass_turn();self.assertEqual(game.hp,1)
         self.assertEqual(game.active,[]);self.assertEqual(len(game.failed),1)
 
     def test_defeat_is_death_and_does_not_give_reward(self):
@@ -177,18 +180,18 @@ class CombatTests(unittest.TestCase):
     def test_diplomacy_grants_once_discounts_and_limits(self):
         game=create();start=game.hero.gold
         # Initial diplomacy rank 1, then health, gold, reputation, extra quest, discount/stock.
-        game.gain_branch('Дипломатия',sum(COSTS[1:3]));self.assertEqual(game.hero.gold,start+15)
-        game.gain_branch('Дипломатия',0);self.assertEqual(game.hero.gold,start+15)
-        game.choose_path('Дипломатия','left');game.gain_branch('Дипломатия',sum(COSTS[3:]))
+        game.gain_branch('Дипломатия',sum(COSTS[1:3]));self.assertEqual(game.hero.gold,start+40)
+        game.gain_branch('Дипломатия',0);self.assertEqual(game.hero.gold,start+40)
+        game.gain_branch('Дипломатия',COSTS[3]);game.choose_path('Дипломатия','left');game.gain_branch('Дипломатия',sum(COSTS[4:]))
         self.assertEqual(game.quest_limit(),3);self.assertEqual(game.offer_limit(),3)
-        self.assertTrue(all(v>=5 for v in game.reputation.values()))
-        self.assertEqual(game.shop()['discount'],10)
-        self.assertIn('guild:kit',[o['card'] for o in game.shop()['offers']])
-        self.assertEqual(next(o['price'] for o in game.shop()['offers'] if o['card']=='supply:heal'),4)
+        self.assertTrue(game.reputation>=5)
+        self.assertEqual(game.shop()['discount'],15)
+        self.assertTrue(__import__('combat').effects(game.hero).get('stock'))
+        self.assertTrue(all(o['price']>=1 for o in game.shop()['offers']))
         with tempfile.TemporaryDirectory() as d:
             path=Path(d)/'s.json';game.save(path);loaded=Adventure.load(path)
             loaded.gain_branch('Дипломатия',0);self.assertEqual(loaded.hero.gold,game.hero.gold)
-        other=create();other.gain_branch('Дипломатия',sum(COSTS[1:3]));other.choose_path('Дипломатия','right');other.gain_branch('Дипломатия',sum(COSTS[3:]))
+        other=create();other.gain_branch('Дипломатия',sum(COSTS[1:3]));other.gain_branch('Дипломатия',COSTS[3]);other.choose_path('Дипломатия','right');other.gain_branch('Дипломатия',sum(COSTS[4:]))
         self.assertEqual(other.offer_limit(),5);self.assertEqual(other.quest_limit(),2)
         other.search();self.assertEqual(len(other.offers),5)
 
@@ -196,12 +199,12 @@ class CombatTests(unittest.TestCase):
         self.assertTrue(all(c['accuracy']%5==0 for c in CARDS.values()))
         for name in AVAILABLE_ITEMS:
             game=create();game.bag.append(name);game.equip(name)
-            self.assertEqual(game.combat_stats()['hit']%5,0);self.assertEqual(game.combat_stats()['dodge']%5,0)
+            self.assertEqual(game.combat_stats()['hit']%5,0);self.assertNotIn('dodge',game.combat_stats())
         for _,names,*_ in BIOMES.values():
             previous=0
             for tier,name in enumerate(names,1):
                 profile=enemy_profile(name,tier);self.assertGreater(profile['hp'],previous);previous=profile['hp']
-                self.assertEqual(profile['hit']%5,0);self.assertGreater(profile['escape'],0)
+                self.assertNotIn('hit',profile);self.assertGreater(profile['escape'],0)
 
     def test_shop_locality_and_city_sources(self):
         game=create();road=game.shop();game.enter_city();city=game.shop()

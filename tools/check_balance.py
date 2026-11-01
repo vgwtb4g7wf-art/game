@@ -3,19 +3,22 @@ import sys
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from adventure import Adventure
-from combat import CARDS,card_damage,stats
+from combat import CARDS,card_damage,card_heal,stats
 from world_content import BIOMES
 
 
 def fight(weapon,tier,level,day):
     game=Adventure.create('Проверка','Мужской','Человек','Воришка',weapon,'Глыба','Знания')
     game.maybe_event=lambda _:None
+    game.auto_diplomacy=False
     game.turn=day
-    game.xp=(level-1)*100;game.sync_skills();game.hp=stats(game.hero)['hp']
+    game.xp=(level-1)*100;game.stat_points=(level-1)//2
+    while game.stat_points:game.choose_growth('damage')
+    game.sync_skills();game.hp=stats(game.hero)['hp']
     if level>=3:
         game.bag.append('Кожаная куртка');game.equip('Кожаная куртка')
     game.search();q=game.offers[0];q.monster=BIOMES['Княжество Бреннор'][1][tier-1];q.monster_tier=tier
-    game.accept(q.id);game.complete(q.id);game.begin_battle({})
+    game.accept(q.id);game.complete(q.id);game.begin_battle(dict(game.consumables))
     for _ in range(160):
         b=game.battle
         if not b:return game.last_battle['outcome']=='victory',game.last_battle['rounds']
@@ -26,7 +29,7 @@ def fight(weapon,tier,level,day):
             damage=card_damage(c,game.hero)
             missing=game.combat_stats()['hp']-game.hp
             incoming=b['intent_value'] if b['intent']=='attack' else 0
-            value=damage+min(missing,c['heal'])*.8+min(max(0,incoming-b['block']),c['block'])*.6+c['bank']
+            value=damage+min(missing,card_heal(c,game.hero))*.8+min(max(0,incoming-b['block']),c['block'])*.6+c['bank']
             if damage>=b['enemy_hp']+b['enemy_armor']+b['enemy_block'] and damage:value+=20
             if value>0:choices.append((value/max(1,c['cost']),i))
         if choices:game.play_card(max(choices)[1])

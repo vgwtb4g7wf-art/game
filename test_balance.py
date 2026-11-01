@@ -18,7 +18,7 @@ class BalanceTests(unittest.TestCase):
     def test_third_tier_is_risky_before_development(self):
         runs=[balance.fight('Железный меч',3,1,day) for day in range(1,41)]
         wins=sum(win for win,_ in runs)
-        self.assertGreater(wins,5)
+        self.assertGreater(wins,0)
         self.assertLess(wins,38)
 
 

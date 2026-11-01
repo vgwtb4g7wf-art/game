@@ -7,10 +7,12 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from adventure import Adventure, ITEMS, AVAILABLE_ITEMS, MONSTERS, SAVE, AVATARS
-from combat import CARDS, ITEM_POWER, SKILL_POWER, deck,selectable
+from combat import CARDS, ITEM_POWER, SKILL_POWER, deck,selectable,card_damage,card_ratio,card_heal
 from world_content import BIOMES, REGION_LORE,enemy_profile
 from progression import COSTS, TREES, PATH_NAMES, unlocked
 from world_systems import calendar
+from diplomacy import NEIGHBOR_PAIRS,ACTIVE_COUNTRIES
+from bestiary import BESTIARY
 from eterion import BACKGROUNDS, BRANCHES, COUNTRIES, RACES, REGIONS, ROUTES
 
 ROOT = Path(__file__).parent / 'web'
@@ -20,11 +22,12 @@ def state(game):
     return None if game is None else {
         'hero': asdict(game.hero),'dead':game.dead,'failed':len(game.failed),'quest_limit':game.quest_limit(),'offer_limit':game.offer_limit(), 'avatar':game.avatar,'level_notice':game.level_notice,'skills_notice':game.skills_notice(), 'paths':game.paths,'selected_skills':game.selected_skills,
         'selectable_skills':selectable(game.hero),'unlocked_skills':unlocked(game.hero),'level_points':game.level_points,'calendar':calendar(game.turn),
-        'reputation':game.reputation,'fame':game.fame,'event':game.event,'preparation':game.preparation, 'turn': game.turn, 'in_city': game.in_city,
+        'stat_points':game.stat_points,'stat_hp':game.stat_hp,'stat_damage':game.stat_damage,'relations':game.relations,'auto_diplomacy':game.auto_diplomacy,'war_counts':{c:game.war_count(c) for c in COUNTRIES},'social':game.social_status(),'attitudes':game.attitudes,'combat_rating':game.combat_rating(),'narrative':game.narrative_view(),'reputation':game.reputation,'fame':game.fame,'event':game.event,'preparation':game.preparation, 'turn': game.turn, 'in_city': game.in_city,
         'hp': game.hp, 'combat_stats': game.combat_stats(), 'battle': game.battle,
+        'card_values':{k:dict(damage=card_damage(c,game.hero),ratio=card_ratio(c,game.hero),heal=card_heal(c,game.hero)) for k,c in CARDS.items()},
         'last_battle': game.last_battle, 'consumables': game.consumables, 'shop': game.shop(),
         'deck': [dict(card=key, source=source) for key, source in deck(game.hero, {})],
-        'fee': game.entry_fee(), 'xp': game.xp, 'level': 1 + game.xp // 100,
+        'rest':game.rest_offer(),'sales':{**{'gear:'+n:game.sale_price('gear:'+n) for n in game.bag},**{k:game.sale_price(k) for k in game.consumables}},'fee': game.entry_fee(), 'xp': game.xp, 'level': 1 + game.xp // 100,
         'branch_xp': game.branch_xp, 'bag': game.bag,
         'offers': [asdict(q) for q in game.offers if q.origin == game.hero.region and q.origin_city == game.in_city],
         'active': [asdict(q) for q in game.active], 'completed': len(game.completed),
@@ -51,11 +54,11 @@ class Handler(BaseHTTPRequestHandler):
         if path == '/api/state':
             self.json({'game': state(self.server.game)})
         elif path == '/api/catalog':
-            self.json({'races': RACES, 'backgrounds': BACKGROUNDS, 'branches': BRANCHES,
-                       'avatars':AVATARS,'items': AVAILABLE_ITEMS, 'trees':TREES,'branch_costs':COSTS,'path_names':PATH_NAMES, 'regions': {n: asdict(r) for n, r in REGIONS.items()},
-                       'routes': ROUTES, 'monsters': MONSTERS, 'countries': COUNTRIES,
+            self.json({'races': RACES, 'backgrounds':{n:(v['branch'],v['gold']) for n,v in __import__('origins').ORIGINS.items()},'origin_bonuses':__import__('origins').ORIGINS, 'branches': BRANCHES,
+                       'avatars':AVATARS,'items':{k:v for k,v in ITEMS.items() if k in __import__('social_rules').GEAR_PRICES},'starting_items':AVAILABLE_ITEMS, 'trees':TREES,'branch_costs':COSTS,'path_names':PATH_NAMES, 'regions': {n: asdict(r) for n, r in REGIONS.items()},
+                       'routes': ROUTES, 'monsters': MONSTERS, 'countries': COUNTRIES,'country_neighbors':NEIGHBOR_PAIRS,'active_countries':ACTIVE_COUNTRIES,
                        'cards': CARDS, 'item_power': ITEM_POWER, 'skill_power': SKILL_POWER,
-                       'enemy_profiles':{n:enemy_profile(n,i+1) for _,names,*_ in BIOMES.values() for i,n in enumerate(names)},'biomes': BIOMES, 'region_lore': REGION_LORE})
+                       'bestiary':list(BESTIARY.values()),'enemy_profiles':{n:enemy_profile(n,m['tier']) for n,m in BESTIARY.items()},'biomes': BIOMES, 'region_lore': REGION_LORE})
         elif path in ('/', '/style.css', '/game.js', '/map.js'):
             name = 'index.html' if path == '/' else path[1:]
             mime = {'index.html': 'text/html', 'style.css': 'text/css', 'game.js': 'text/javascript', 'map.js':'text/javascript'}[name]
@@ -101,6 +104,8 @@ class Handler(BaseHTTPRequestHandler):
                 game.enter_city()
             elif action == 'leave':
                 game.leave_city()
+            elif action == 'pass_turn':
+                game.pass_turn()
             elif action == 'wait':
                 game.wait()
             elif action == 'search':
@@ -115,10 +120,19 @@ class Handler(BaseHTTPRequestHandler):
                 game.select_skill(data['name'])
             elif action == 'choose_path':
                 game.choose_path(data['branch'],data['path'])
+            elif action == 'choose_growth':
+                game.choose_growth(data['kind'])
+            elif action == 'toggle_diplomacy':
+                game.ensure_free()
+                game.auto_diplomacy=not game.auto_diplomacy
             elif action == 'spend_level':
                 game.spend_level(data['branch'])
             elif action == 'resolve_event':
                 game.resolve_event(data['choice'])
+            elif action == 'sell':
+                game.sell(data['key'])
+            elif action == 'use_item':
+                game.use_item(data['key'])
             elif action == 'buy':
                 game.buy(data['card'])
             elif action == 'play':

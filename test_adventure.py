@@ -13,8 +13,20 @@ from combat import CARDS
 
 def create():
     game=Adventure.create('Эрин','Женский','Человек','Торговец','Железный меч','Глыба','Знания')
+    # Legacy fixtures isolate existing combat/world tests from the new origin economy.
+    game.hero.branches['Дипломатия']=1;game.branch_xp['Дипломатия']=0
+    game.hero.gold=40;game.fame=0;game.applied_grants=[];game.skill_notices=[]
+    game.consumables={};game.consumable_costs={};game.apply_unlocks();game.sync_skills()
     game.maybe_event=lambda context:None
+    game.auto_diplomacy=False
     return game
+
+
+def complete_quest(game,quest_id):
+    game.complete(quest_id)
+    while game.event and game.event['kind']=='dialogue':
+        options=game.narrative_view()['options']
+        game.resolve_event('listen' if any(o['id']=='listen' for o in options) else 'good')
 
 
 def resolve(game):
@@ -53,19 +65,20 @@ class AdventureTests(unittest.TestCase):
         q = game.offers[0]
         game.accept(q.id)
         self.assertEqual(game.turn, 2)
-        game.complete(q.id)
+        complete_quest(game,q.id)
         self.assertEqual(game.xp,0)
         self.assertIsNotNone(game.preparation)
         resolve(game)
         self.assertEqual(game.turn, 3)
-        self.assertEqual(game.xp, 20)
-        self.assertEqual(game.hero.gold, 48)
-        self.assertEqual(game.branch_xp['Мощь'], 12)
-        self.assertIn(q.loot, game.bag)
+        self.assertEqual(game.xp, 16)
+        self.assertEqual(game.hero.gold, 53)
+        self.assertEqual(game.branch_xp['Мощь'], 8)
+        self.assertIsNone(q.loot)
+        self.assertEqual(game.bag,['Железный меч'])
         self.assertIn('Победа в карточной дуэли', game.journal[-1])
         with self.assertRaises(ValueError):
-            game.complete(q.id)
-        self.assertEqual(game.xp, 20)
+            complete_quest(game,q.id)
+        self.assertEqual(game.xp, 16)
 
     def test_remote_city_quest_and_branch_unlock(self):
         game = create()
@@ -75,16 +88,16 @@ class AdventureTests(unittest.TestCase):
         game.accept(q.id)
         before = game.turn
         with self.assertRaises(ValueError):
-            game.complete(q.id)
+            complete_quest(game,q.id)
         self.assertEqual(game.turn, before)
         # Передвижение протестировано в базовом наборе; здесь проверяем условия цели.
         game.hero.region = q.target
         game.in_city = False
         with self.assertRaises(ValueError):
-            game.complete(q.id)
+            complete_quest(game,q.id)
         game.enter_city()
         branch_before = game.hero.branches[q.branch]
-        game.complete(q.id)
+        complete_quest(game,q.id)
         self.assertEqual(game.hero.branches[q.branch], branch_before)
         self.assertGreater(game.xp, 0)
 
@@ -104,11 +117,10 @@ class AdventureTests(unittest.TestCase):
             game.accept(ids[0])
 
     def test_unreachable_destinations_not_offered(self):
-        game = create()
-        for country in ('Азалтир', 'Тротенфорская империя', 'Лесное царство Талласа', 'Дваллинхорг'):
-            game.set_relation('Княжество Бреннор', country, True)
+        game=create();game.set_relation('Княжество Бреннор','Азалтир',True)
+        self.assertEqual(game.travel_error('Келебран'),'Граница закрыта: страны находятся в состоянии войны.')
         game.search()
-        self.assertTrue(all(q.target in ('Глыба', 'Бреннор') for q in game.offers))
+        self.assertTrue(all(q.target in game.reachable() for q in game.offers))
 
     def test_equipment_ownership_and_slots(self):
         game = create()
@@ -188,7 +200,7 @@ class ServerTests(unittest.TestCase):
                         done=post('play',index=index)
                     else:
                         done=post('end_round')
-                self.assertEqual(done['xp'], 20)
+                self.assertEqual(done['xp'], 16)
                 post('save')
                 post('move', target='Бреннор')
                 restored = post('load')

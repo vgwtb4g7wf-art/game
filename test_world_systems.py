@@ -1,3 +1,4 @@
+from test_adventure import complete_quest
 import json
 import tempfile
 import unittest
@@ -15,7 +16,7 @@ from world_systems import calendar
 class WorldTests(unittest.TestCase):
     def test_calendar_rollovers(self):
         self.assertEqual(calendar(1),dict(year=1,month='Капель',season='Весна',week='Солнечная',day='Искра',date=1))
-        self.assertEqual(calendar(6)['week'],'Ночная')
+        self.assertEqual(calendar(6)['week'],'Лунная')
         self.assertEqual(calendar(11)['month'],'Цветень')
         self.assertEqual(calendar(21)['season'],'Лето')
         self.assertEqual(calendar(81)['year'],2)
@@ -54,13 +55,13 @@ class WorldTests(unittest.TestCase):
         game.gain_branch('Мощь',sum(COSTS[:4]));self.assertEqual(game.hero.branches['Мощь'],3)
         self.assertEqual(game.branch_xp['Мощь'],COSTS[3]);game.choose_path('Мощь','right')
         self.assertEqual(game.hero.branches['Мощь'],4);self.assertIn('Разящий удар',unlocked(game.hero))
-        self.assertNotIn('Сокрушающий удар',unlocked(game.hero))
+        self.assertNotIn('Защитный удар',unlocked(game.hero))
         with self.assertRaises(ValueError):game.choose_path('Мощь','left')
         game.select_skill('Натиск');self.assertIn('Натиск',game.selected_skills)
         with self.assertRaises(ValueError):game.select_skill('Закалка')
         game.select_skill('Натиск');self.assertNotIn('skill:Натиск',[k for k,_ in __import__('combat').deck(game.hero,{})])
         game.xp=95;game.search();q=next(q for q in game.offers if not q.monster and q.target==game.hero.region)
-        game.accept(q.id);game.complete(q.id);self.assertEqual(game.level_points,1)
+        game.accept(q.id);complete_quest(game,q.id);self.assertEqual(game.level_points,1)
         before=game.branch_xp['Хитрость'];game.spend_level('Хитрость')
         self.assertEqual(game.branch_xp['Хитрость'],before+20);self.assertEqual(game.level_points,0)
         with self.assertRaises(ValueError):game.spend_level('Хитрость')
@@ -83,48 +84,40 @@ class WorldTests(unittest.TestCase):
     def test_tavern_restocks_and_changes_after_five_days(self):
         game=create();game.hero.gold=100
         original={o['card'] for o in game.shop()['offers']}
-        for _ in range(3):game.buy('supply:heal')
-        with self.assertRaises(ValueError):game.buy('supply:heal')
-        for _ in range(5):game.wait()
-        self.assertEqual(next(o['left'] for o in game.shop()['offers'] if o['card']=='supply:heal'),3)
+        key=game.shop()['offers'][0]['card']
+        for _ in range(3):game.buy(key)
+        with self.assertRaises(ValueError):game.buy(key)
+        for _ in range(5):game.pass_turn()
+        self.assertTrue(all(o['left']==3 for o in game.shop()['offers']))
         self.assertNotEqual(original,{o['card'] for o in game.shop()['offers']})
-        game.buy('supply:heal')
-        self.assertEqual(game.consumables['supply:heal'],4)
+        newkey=game.shop()['offers'][0]['card'];game.buy(newkey)
+        self.assertEqual(sum(game.consumables.values()),4)
 
     def test_reputation_toll_guard_fight_and_war_priority(self):
-        game=create();country=REGIONS['Келебран'].country
-        game.repute(country,-30,25)
-        gate=game.reputation_gate('Келебран')
-        self.assertEqual(gate['fee'],25)
+        game=create();game.hero.gold=100;game.repute(None,-30,25)
+        self.assertEqual(game.reputation_gate('Келебран')['fee'],25)
         with self.assertRaises(ValueError):game.move('Келебран')
-        game.move('Келебран','pay')
-        self.assertEqual(game.hero.gold,15)
-        self.assertEqual(game.hero.region,'Келебран')
-        game.move('Азалтир') # Внутри страны плата не нужна.
-        game.move('Келебран');game.move('Глыба')
-        game.set_relation('Княжество Бреннор',country,True)
-        before=game.hero.gold
-        with self.assertRaises(ValueError):game.move('Келебран','pay')
-        self.assertEqual(game.hero.gold,before)
-        game.set_relation('Княжество Бреннор',country,False)
-        game.move('Келебран','fight')
-        self.assertEqual(game.hero.region,'Глыба')
-        self.assertEqual(game.preparation['kind'],'border')
-        game.begin_battle({});resolve(game)
+        game.move('Келебран','pay');self.assertEqual(game.hero.gold,75)
+        game.move('Азалтир');game.move('Келебран');self.assertEqual(game.hero.gold,75)
+        game.move('Глыба','pay');self.assertEqual(game.hero.gold,50)
+        game.set_relation('Княжество Бреннор','Азалтир',True)
+        with self.assertRaises(ValueError):game.move('Келебран','fight')
+        game.set_relation('Княжество Бреннор','Азалтир',False)
+        from unittest.mock import patch
+        with patch('battle_rules.random.Random') as rng:
+            rng.return_value.random.return_value=0
+            game.move('Келебран','fight')
+        game.begin_battle({});game.battle['enemy_hp']=1;game.battle['enemy_armor']=0;resolve(game)
         self.assertEqual(game.last_battle['outcome'],'victory')
-        self.assertEqual(game.hero.region,'Келебран')
-        self.assertEqual(game.xp,0) # За стражу нет награды охоты.
-        self.assertEqual(game.reputation[country],-35)
+        self.assertEqual(game.hero.region,'Келебран');self.assertEqual(game.xp,0)
+        self.assertEqual(game.reputation,-35)
 
-    def test_fame_spreads_but_reputation_does_not_and_slowly_fades(self):
-        game=create();country='Княжество Бреннор'
-        game.repute(country,-5,25)
-        self.assertEqual(game.reputation[country],-5)
-        self.assertGreater(game.fame['Азалтир'],0)
-        self.assertEqual(game.reputation['Азалтир'],0)
-        before=game.fame[country]
-        for _ in range(40):game.wait()
-        self.assertLess(game.fame[country],before)
+    def test_global_reputation_and_fame_slowly_fades(self):
+        game=create();before=game.fame;game.repute('Княжество Бреннор',-5,25)
+        self.assertEqual(game.reputation,-5);self.assertEqual(game.fame,before+25)
+        initial=game.fame
+        for _ in range(40):game.pass_turn()
+        self.assertLess(game.fame,initial)
 
     def test_events_good_bad_cooldown_and_no_repeated_free_entry_roll(self):
         game=Adventure.create('Нора','Женский','Человек','Торговец','Железный меч','Глыба')
@@ -135,17 +128,18 @@ class WorldTests(unittest.TestCase):
             self.assertIsNotNone(game.event)
             with self.assertRaises(ValueError):game.search()
             game.resolve_event('bad')
-            self.assertEqual(game.hero.gold,39) # 40 − 5 вход + 4 кошель.
+            self.assertEqual(game.hero.gold,27) # 28 − 5 вход + 4 кошель.
             country=REGIONS[game.hero.region].country
-            self.assertEqual(game.reputation[country],-6)
-            self.assertEqual(game.fame[country],9)
+            self.assertEqual(game.reputation,-6)
+            self.assertEqual(game.fame,9)
             game.leave_city();game.enter_city()
             self.assertIsNone(game.event)
-            for _ in range(5):game.wait()
+            game.leave_city()
+            for _ in range(5):game.pass_turn()
             game.search();self.assertIsNotNone(game.event)
             game.resolve_event('good')
-            self.assertEqual(game.reputation[country],-3)
-            self.assertEqual(game.fame[country],12)
+            self.assertEqual(game.reputation,-3)
+            self.assertEqual(game.fame,12)
 
     def test_three_weapon_families_and_persistent_new_state(self):
         weapons=[k for k,v in AVAILABLE_ITEMS.items() if v[0]=='Оружие']
