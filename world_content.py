@@ -33,21 +33,22 @@ def consumable(key, title, price, **effects):
     return key
 
 
-consumable('supply:heal','Настой путника',5,cost=1,heal=14)
-consumable('supply:smoke','Дымовая завеса',6,cost=0,block=12)
+consumable('supply:heal','Настой путника',5,cost=1,heal=4)
+consumable('supply:smoke','Дымовая завеса',6,cost=0,block=4)
 COUNTRY_CARDS = {}
 for i, (country, (biome, _, _, _, _)) in enumerate(BIOMES.items()):
     titles = ['Кузнечный огонь','Морозный настой','Свиток прилива','Сок лесного древа',
               'Имперская бомба','Песчаная пыль','Болотный яд','Пепельный свиток']
     COUNTRY_CARDS[country] = consumable(f'country:{i}', titles[i], 9,
-                                       cost=1, damage=12 if i%2==0 else 0,
-                                       block=0 if i%2==0 else 12, heal=4, accuracy=10 if i%2==0 else 0)
+                                       cost=1, damage=4 if i%2==0 else 0,
+                                       block=0 if i%2==0 else 4, heal=1, accuracy=10 if i%2==0 else 0)
 REGION_CARDS = {}
 for i, (name, region) in enumerate(REGIONS.items()):
     REGION_CARDS[name] = consumable(f'region:{i}', f'Талисман: {name}', 8,
-                                   cost=1, damage=5+i%4, block=5+i%3, accuracy=5)
-consumable('city:tonic','Аптекарский эликсир',10,cost=1,heal=20)
-consumable('capital:seal','Свиток королевской защиты',15,cost=1,block=22,heal=5)
+                                   cost=1, damage=2+i%2, block=2+i%2, accuracy=5)
+consumable('city:tonic','Аптекарский эликсир',10,cost=1,heal=6)
+consumable('guild:kit','Гильдейский резерв',8,cost=1,heal=3,block=3)
+consumable('capital:seal','Свиток королевской защиты',15,cost=1,block=8,heal=2)
 
 
 def tavern(region, in_city, cycle=0):
@@ -61,7 +62,7 @@ def tavern(region, in_city, cycle=0):
         if r.capital:
             keys += ['capital:seal']
     return dict(id=f'{region}:{int(in_city)}', name=f'{kind} · {region}',
-                description=REGION_LORE[region], keys=keys)
+                description=REGION_LORE[region], keys=list(dict.fromkeys(keys)))
 
 
 def monster_tier(name):
@@ -69,3 +70,18 @@ def monster_tier(name):
         if name in names:
             return names.index(name)+1
     return None
+
+
+def enemy_profile(name,tier):
+    hp=(8,15,26,36,48)[tier-1]
+    attack=(2,4,7,9,11)[tier-1]
+    armor=(0,0,2,3,4)[tier-1]
+    escape=(2,3,4,6,8)[tier-1]
+    defensive=False
+    lower=name.lower()
+    if any(w in lower for w in ('слизень','голем','страж','краб','титан')):
+        armor+=1;hp=max(6,hp-1);defensive=True
+    if any(w in lower for w in ('волк','шакал','паук','виверна')):
+        hp=max(6,hp-1);escape+=1
+    if 'дракон' in lower:hp+=2;escape+=1
+    return dict(hp=hp,attack=attack,armor=armor,escape=escape,hit=85,block=1+tier//2,defensive=defensive,fame_loss=1+tier)

@@ -2,6 +2,7 @@
 from random import Random
 from eterion import BRANCHES, COUNTRIES, REGIONS, ROUTES
 from progression import COSTS, TREES, unlocked
+from combat import SKILL_POWER,selectable,effects
 
 MONTHS = ('Капель','Цветень','Солнцевей','Жарник','Листопад','Туманник','Иней','Снеговей')
 DAYS = ('Искра','Камень','Ветер','Ручей','Звезда')
@@ -18,8 +19,11 @@ def calendar(turn):
 class WorldSystems:
     def init_world(self):
         self.paths=dict.fromkeys(BRANCHES,None)
-        self.selected_skills=unlocked(self.hero)[:3]
+        self.selected_skills=selectable(self.hero)[:3]
         self.level_points=0
+        self.avatar="✦"
+        self.level_notice=0
+        self.skill_notices=[]
         self.reputation=dict.fromkeys(COUNTRIES,0)
         self.fame=dict.fromkeys(COUNTRIES,0)
         self.last_fame_event=dict.fromkeys(COUNTRIES,self.turn)
@@ -28,9 +32,14 @@ class WorldSystems:
         self.last_event_turn=-10
         self.last_event_check=0
         self.preparation=None
+        self.dead=False
+        self.failed=[]
+        self.applied_grants=[]
         self.sync_skills()
+        self.apply_unlocks()
 
     def sync_skills(self):
+        self.hero.level=1+self.xp//100
         self.hero.paths=self.paths
         self.hero.selected_skills=self.selected_skills
 
@@ -41,33 +50,36 @@ class WorldSystems:
                 self.fame[country]=max(0,self.fame[country]-1)
 
     def gain_branch(self,branch,amount):
+        before=set(unlocked(self.hero))
         self.branch_xp[branch]+=amount
-        while self.hero.branches[branch]<4:
+        while self.hero.branches[branch]<6:
             level=self.hero.branches[branch]
-            if level==2 and not self.paths[branch]:
+            if level==3 and not self.paths[branch]:
                 break
             cost=COSTS[level]
             if self.branch_xp[branch]<cost:
                 break
             self.branch_xp[branch]-=cost
             self.hero.branches[branch]+=1
-        if self.hero.branches[branch]==4:
+        if self.hero.branches[branch]==6:
             self.branch_xp[branch]=0
         self.sync_skills()
+        self.apply_unlocks()
+        self.skill_notices=list(dict.fromkeys(self.skill_notices+[s for s in unlocked(self.hero) if s not in before]))
 
     def choose_path(self,branch,path):
         self.ensure_free()
         if branch not in TREES or path not in ('left','right'):
             raise ValueError('Неизвестный путь.')
-        if self.hero.branches[branch]<2 or self.paths[branch]:
-            raise ValueError('Путь выбирается один раз после второй ступени.')
+        if self.hero.branches[branch]<3 or self.paths[branch]:
+            raise ValueError('Путь выбирается один раз после третьей ступени.')
         self.paths[branch]=path
         self.gain_branch(branch,0)
 
     def select_skill(self,name):
         self.ensure_free()
-        if name not in unlocked(self.hero):
-            raise ValueError('Этот навык ещё не открыт.')
+        if name not in selectable(self.hero):
+            raise ValueError('Выбирать можно только открытые навыки-карты. Улучшения и пассивки работают автоматически.')
         if name in self.selected_skills:
             self.selected_skills.remove(name)
         elif len(self.selected_skills)>=3:
@@ -81,13 +93,14 @@ class WorldSystems:
         self.ensure_free()
         if branch not in BRANCHES or self.level_points<1:
             raise ValueError('Нет награды уровня или неизвестная ветвь.')
-        if self.hero.branches[branch]>=4:
+        if self.hero.branches[branch]>=6:
             raise ValueError('Эта ветвь уже полностью развита.')
         self.level_points-=1
         self.gain_branch(branch,20)
         self.journal.append(f'Награда уровня: +20 опыта ветви «{branch}».')
 
     def repute(self,country,rep=0,fame=0):
+        if rep>0 and fame>0:fame+=effects(self.hero).get('fame_bonus',0)
         self.reputation[country]=max(-100,min(100,self.reputation[country]+rep))
         self.fame[country]=max(0,min(1000,self.fame[country]+fame))
         self.last_fame_event[country]=self.turn
@@ -100,6 +113,38 @@ class WorldSystems:
             for neighbor in neighbors:
                 self.fame[neighbor]=min(1000,self.fame[neighbor]+max(1,fame//3))
                 self.last_fame_event[neighbor]=self.turn
+
+    def quest_limit(self):return 2+effects(self.hero).get('quest_limit',0)
+
+    def offer_limit(self):return 3+effects(self.hero).get('offer_limit',0)
+
+    def apply_unlocks(self):
+        country=REGIONS[self.hero.region].country
+        for name in unlocked(self.hero):
+            grant=SKILL_POWER[name]['grant']
+            if not grant or name in self.applied_grants:continue
+            self.applied_grants.append(name)
+            self.hero.gold+=grant.get('gold',0)
+            if grant.get('fame'):self.repute(country,0,grant['fame'])
+            if grant.get('reputation_all'):
+                for c in COUNTRIES:self.repute(c,grant['reputation_all'],0)
+
+    def skills_notice(self):
+        return bool(self.level_points or self.skill_notices or any(level==3 and not self.paths[b] for b,level in self.hero.branches.items()))
+
+    def war_gate(self,target):
+        source=REGIONS[self.hero.region].country
+        country=REGIONS[target].country
+        if source!=country and tuple(sorted((source,country))) in self.wars:
+            return dict(country=country,fee=60,kind='war')
+        return None
+
+    def entry_fee(self):
+        country=REGIONS[self.hero.region].country
+        capital=REGIONS[self.hero.region].capital
+        if self.reputation[country]>=20 and self.fame[country]>=(50 if capital else 20):
+            return 0
+        return 10 if capital else 5
 
     def reputation_gate(self,target):
         current=REGIONS[self.hero.region].country
@@ -144,6 +189,15 @@ class WorldSystems:
         self.event=None
 
     def validate_world(self):
+        from adventure import AVATARS
+        if type(self.dead) is not bool or self.dead!=(self.hp==0):raise ValueError('Некорректное состояние жизни героя.')
+        if (not isinstance(self.failed,list) or not all(isinstance(x,str) for x in self.failed) or len(set(self.failed))!=len(self.failed)
+            or any(x in self.completed or any(q.id==x for q in self.active+self.offers) for x in self.failed)):
+            raise ValueError('Некорректные проваленные задания.')
+        if not isinstance(self.applied_grants,list) or any(n not in unlocked(self.hero) for n in self.applied_grants):raise ValueError('Некорректные разовые награды.')
+        if (self.avatar not in AVATARS or type(self.level_notice) is not int or not 0<=self.level_notice<=1+self.xp//100
+            or not isinstance(self.skill_notices,list) or any(s not in unlocked(self.hero) for s in self.skill_notices)):
+            raise ValueError('Некорректные уведомления или значок героя.')
         if self.event is not None:
             e=self.event
             if (not isinstance(e,dict) or e.get('kind') not in ('traveler','purse','rumor')

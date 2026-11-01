@@ -1,36 +1,43 @@
 """Исполнение дуэли. Состояние и генератор случайностей сохраняются вместе с игрой."""
 import random
-from combat import CARDS, ITEM_POWER, SKILL_POWER, deck, stats
-from world_content import CONSUMABLES, tavern
+from combat import CARDS, ITEM_POWER, SKILL_POWER, deck, stats, effects, card_damage
+from world_content import CONSUMABLES, tavern, enemy_profile
 from eterion import REGIONS, Game
 
 
 class BattleRules:
     def ensure_free(self):
+        if self.dead:raise ValueError('Герой погиб. Загрузите сохранение или создайте нового героя.')
         if self.battle is not None or self.preparation is not None:
             raise ValueError('Сначала завершите дуэль или отмените подготовку.')
         if self.event is not None:
             raise ValueError('Сначала решите случайное событие.')
 
     def combat_stats(self):
+        self.hero.level=1+self.xp//100
         return stats(self.hero)
 
     def move(self, destination, approach=None):
         self.ensure_free()
-        error=self.travel_error(destination)
-        if error:raise ValueError(error)
+        if destination not in dict(self.neighbors()):raise ValueError('Можно перейти только в соседний регион.')
+        if REGIONS[destination].blocked:raise ValueError('Регион закрыт для путешественников.')
+        war=self.war_gate(destination)
         gate=self.reputation_gate(destination)
-        if gate:
-            if approach=='fight':
-                self.preparation=dict(kind='border',target=destination,quest_id=None,
-                                      enemy='Стража: '+gate['country'],tier=min(5,1+(self.xp//100)//2))
-                return
-            if approach!='pay':
-                raise ValueError('Из-за репутации стража требует плату или поединок.')
-            if self.hero.gold<gate['fee']:raise ValueError('Недостаточно золота для пограничной пошлины.')
-            self.hero.gold-=gate['fee']
-            self.journal.append(f'Пограничная пошлина: {gate["fee"]} золота.')
-        super().move(destination)
+        total=(war['fee'] if war else 0)+(gate['fee'] if gate else 0)
+        if war and approach!='pay':
+            raise ValueError(f'Военная граница: для прохода нужно заплатить {total} золота.')
+        if gate and approach=='fight' and not war:
+            self.preparation=dict(kind='border',target=destination,quest_id=None,
+                                  enemy='Стража: '+gate['country'],tier=min(5,1+(self.xp//100)//2))
+            return
+        if gate and approach!='pay':raise ValueError('Из-за репутации стража требует плату или поединок.')
+        if total and self.hero.gold<total:raise ValueError('Недостаточно золота для прохода границы.')
+        if total:
+            self.hero.gold-=total
+            self.journal.append(f'Пограничная пошлина: {total} золота'+(' (в том числе военный пропуск 60).' if war else '.'))
+        source=self.hero.region
+        self.hero.region=destination;self.in_city=False
+        self.record(f'Переход: {source} → {destination}. Вы за городскими воротами.')
         self.maybe_event('Переход')
 
     def enter_city(self):
@@ -51,8 +58,8 @@ class BattleRules:
 
     def wait(self):
         self.ensure_free()
-        self.hp = min(self.combat_stats()['hp'], self.hp + 12)
-        self.record('Отдых: восстановлено до 12 здоровья.')
+        self.hp = min(self.combat_stats()['hp'], self.hp + 6)
+        self.record('Отдых: восстановлено до 6 здоровья.')
 
     def set_relation(self, first, second, war):
         self.ensure_free()
@@ -60,8 +67,11 @@ class BattleRules:
 
     def shop(self):
         shop = tavern(self.hero.region, self.in_city, (self.turn-1)//5)
+        if effects(self.hero).get('stock'):shop['keys'].append('guild:kit')
+        discount=effects(self.hero).get('discount',0)
+        shop['discount']=discount
         shop['refresh_in']=5-(self.turn-1)%5
-        shop['offers'] = [dict(card=key, price=CONSUMABLES[key]['price'],
+        shop['offers'] = [dict(card=key, price=max(1,(CONSUMABLES[key]['price']*(100-discount))//100),
                                left=max(0, 3-self.purchases.get(shop['id']+'|'+str((self.turn-1)//5)+'|'+key, 0)))
                           for key in shop.pop('keys')]
         return shop
@@ -95,7 +105,9 @@ class BattleRules:
     def draw_round(self):
         b = self.battle
         b['block'] = 0
-        b['energy'] = 3
+        b['energy_max']=2+b['next_energy']
+        b['energy']=b['energy_max']
+        b['next_energy']=0
         while len(b['hand']) < 4:
             if not b['draw']:
                 if not b['discard']:
@@ -104,8 +116,8 @@ class BattleRules:
                 b['discard'] = []
                 self.roll().shuffle(b['draw'])
             b['hand'].append(b['draw'].pop())
-        b['intent'] = 'guard' if b['round'] % 3 == 0 else 'attack'
-        b['intent_value'] = (5 + b['tier']*2) if b['intent']=='guard' else (3+b['tier']*2)
+        b['intent']='guard' if b['profile']['defensive'] and b['round']%3==0 else 'attack'
+        b['intent_value']=b['profile']['block'] if b['intent']=='guard' else b['profile']['attack']
         self.battle_log(f'Раунд {b["round"]}: противник готовит '+
                         (f'защиту {b["intent_value"]}.' if b['intent']=='guard' else f'удар {b["intent_value"]}.'))
 
@@ -123,10 +135,13 @@ class BattleRules:
         if self.hp<=0:raise ValueError('Сначала отдохните.')
         p=self.preparation
         tier=p['tier']
-        enemy_hp=10+tier*7
+        profile=enemy_profile(p['enemy'],tier)
+        enemy_hp=profile['hp']
         self.battle=dict(quest_id=p['quest_id'],kind=p['kind'],target=p['target'],enemy=p['enemy'],tier=tier,
-                        enemy_hp=enemy_hp,enemy_max=enemy_hp,enemy_armor=max(0,tier-2),enemy_block=0,
-                        round=1,energy=3,block=0,draw=[k for k,_ in deck(self.hero,chosen)],
+                        enemy_hp=enemy_hp,enemy_max=enemy_hp,enemy_armor=profile['armor'],enemy_armor_max=profile['armor'],enemy_block=0,
+                        armor=self.combat_stats()['armor'],armor_max=self.combat_stats()['armor'],profile=profile,
+                        next_energy=0,energy_max=2,exhausted=[],
+                        round=1,energy=2,block=0,retained=None,draw=[k for k,_ in deck(self.hero,chosen)],
                         discard=[],hand=[],log=[],seed=f'{p["enemy"]}:{self.turn}',roll=0,
                         intent='attack',intent_value=0)
         self.preparation=None
@@ -145,35 +160,49 @@ class BattleRules:
             raise ValueError('Выберите карту из руки.')
         key = b['hand'][index]
         c = CARDS[key]
+        if c.get('once') and key in b['exhausted']:
+            raise ValueError('Артефакт уже использован в этой дуэли.')
         if c['cost'] > b['energy']:
             raise ValueError('Не хватает энергии. Завершите раунд.')
         if key in CONSUMABLES and self.consumables.get(key,0) < 1:
             raise ValueError('Расходуемая карта уже использована.')
         b['energy'] -= c['cost']
+        held=b.get('retained')
+        if held==index:b['retained']=None
+        elif held is not None and held>index:b['retained']-=1
         b['hand'].pop(index)
         if key in CONSUMABLES:
             self.consumables[key] -= 1
             if self.consumables[key] == 0:
                 del self.consumables[key]
+        elif c.get('once'):
+            b['exhausted'].append(key)
         else:
             b['discard'].append(key)
+        b['next_energy']+=c.get('bank',0)
         stats = self.combat_stats()
         self.battle_log(f'Карта «{c["name"]}» (энергия −{c["cost"]}).')
-        if c['damage']:
+        if c['damage'] or c.get('ratio'):
             chance = max(5,min(100,stats['hit']+c['accuracy']))
             if self.roll().randint(1,100) <= chance:
-                damage = max(0,c['damage']+stats['damage']-b['enemy_armor'])
-                absorbed = min(b['enemy_block'],damage)
-                b['enemy_block'] -= absorbed
-                damage -= absorbed
-                b['enemy_hp'] = max(0,b['enemy_hp']-damage)
-                self.battle_log(f'Попадание: {damage} урона (защита поглотила {absorbed}).')
+                damage=card_damage(c,self.hero)
+                absorbed=min(b['enemy_block'],damage);b['enemy_block']-=absorbed;damage-=absorbed
+                armored=min(b['enemy_armor'],damage);b['enemy_armor']-=armored;damage-=armored
+                b['enemy_hp']=max(0,b['enemy_hp']-damage)
+                self.battle_log(f'Попадание: {damage} урона здоровью; блок поглотил {absorbed}, броня {armored}.')
             else:
                 self.battle_log(f'Промах! Шанс попадания был {chance}%.')
         b['block'] += c['block']
         self.hp = min(stats['hp'],self.hp+c['heal'])
         if b['enemy_hp'] == 0:
             self.finish_battle('victory')
+
+    def retain_card(self,index):
+        b=self.battle
+        if b is None:raise ValueError('Сейчас нет дуэли.')
+        if index is not None and (type(index) is not int or not 0<=index<len(b['hand'])):
+            raise ValueError('Выберите одну карту из руки.')
+        b['retained']=None if b.get('retained')==index else index
 
     def end_round(self):
         b = self.battle
@@ -184,21 +213,24 @@ class BattleRules:
         if b['intent'] == 'guard':
             b['enemy_block'] = b['intent_value']
             self.battle_log(f'{b["enemy"]} защищается: {b["enemy_block"]} блока.')
-        elif self.roll().randint(1,100) > max(5,85-stats['dodge']):
+        elif self.roll().randint(1,100) > max(5,b['profile']['hit']-stats['dodge']):
             self.battle_log('Враг промахнулся. Вы избежали удара.')
         else:
-            damage = max(0,b['intent_value']-stats['armor'])
-            absorbed = min(damage,b['block'])
-            damage -= absorbed
-            self.hp = max(0,self.hp-damage)
-            self.battle_log(f'Удар врага: −{damage} здоровья; блок поглотил {absorbed}, броня {stats["armor"]}.')
+            damage=b['intent_value']
+            absorbed=min(damage,b['block']);damage-=absorbed
+            armored=min(damage,b['armor']);damage-=armored;b['armor']-=armored
+            self.hp=max(0,self.hp-damage)
+            self.battle_log(f'Удар врага: −{damage} здоровья; блок поглотил {absorbed}, запас брони {armored}.')
         if self.hp == 0:
             self.finish_battle('defeat')
             return
-        b['discard'].extend(key for key in b['hand'] if key not in CONSUMABLES)
-        # Неиспользованные расходники не тратятся и возвращаются в колоду.
-        b['draw'].extend(key for key in b['hand'] if key in CONSUMABLES)
-        b['hand'] = []
+        held=b.get('retained')
+        keep=b['hand'][held] if held is not None else None
+        remaining=[key for i,key in enumerate(b['hand']) if i!=held]
+        b['discard'].extend(key for key in remaining if key not in CONSUMABLES)
+        b['draw'].extend(key for key in remaining if key in CONSUMABLES)
+        b['hand']=[keep] if keep is not None else []
+        b['retained']=None
         b['round'] += 1
         self.draw_round()
 
@@ -217,13 +249,21 @@ class BattleRules:
                 self.journal.append('Стража побеждена. Репутация в стране −5, известность +5.')
             else:
                 self.reward(quest,f'Победа в карточной дуэли над {b["enemy"]}. ')
-        elif outcome=='defeat':
-            lost=min(10,self.hero.gold)
-            self.hero.gold-=lost
-            self.hp=1
-            self.record(f'Поражение: {b["enemy"]}. Потеряно {lost} золота; здоровье 1. Награды нет.')
         else:
-            self.record(f'Отступление от {b["enemy"]}. Награды нет.')
+            country=REGIONS[quest.target if quest else b.get('target') or self.hero.region].country
+            lost=min(self.fame[country],b['profile']['fame_loss'])
+            self.repute(country,0,-lost)
+            if quest:
+                self.active.remove(quest);self.failed.append(quest.id)
+            if outcome=='flee':
+                damage=b['profile']['escape']
+                self.hp=max(0,self.hp-damage)
+                message=f'Побег: удар вслед −{damage} здоровья (обходит броню и блок).'
+            else:
+                self.hp=0;message='Поражение в дуэли.'
+            self.dead=self.hp==0
+            self.record(message+f' Известность −{lost}.'+(' Задание провалено.' if quest else '')+(' Герой погиб.' if self.dead else ''))
+            self.last_battle['dead']=self.dead
         self.last_battle['message'] = self.journal[-1]
 
     def flee(self):
@@ -242,16 +282,23 @@ class BattleRules:
                 q=next(q for q in self.active if q.id==b['quest_id'])
                 if not q.monster or q.monster!=b['enemy'] or q.target!=self.hero.region or q.monster_tier!=b['tier']:
                     raise ValueError('Дуэль не соответствует заданию.')
-            for key in ('tier','enemy_hp','enemy_max','enemy_armor','enemy_block','round','energy','block','roll','intent_value'):
+            for key in ('tier','enemy_hp','enemy_max','enemy_armor','enemy_block','round','energy','block','roll','intent_value','armor','armor_max','enemy_armor_max','next_energy','energy_max'):
                 if type(b[key]) is not int or b[key]<0:
                     raise ValueError('Повреждено состояние дуэли.')
-            if not 1<=b['tier']<=5 or not 0<b['enemy_hp']<=b['enemy_max'] or b['round']<1 or b['energy']>3:
+            if not 1<=b['tier']<=5 or not 0<b['enemy_hp']<=b['enemy_max'] or b['round']<1 or b['energy']>b['energy_max'] or not 2<=b['energy_max']<=3 or b['next_energy']>1 or b['armor']>b['armor_max'] or b['enemy_armor']>b['enemy_armor_max']:
                 raise ValueError('Некорректные параметры дуэли.')
             if b['intent'] not in ('attack','guard') or not isinstance(b['seed'],str):
                 raise ValueError('Некорректное намерение.')
-            for key in ('hand','draw','discard'):
+            for key in ('hand','draw','discard','exhausted'):
                 if not isinstance(b[key],list) or any(c not in CARDS for c in b[key]) or len(b[key])>100:
                     raise ValueError('Некорректная колода.')
+            if self.dead:raise ValueError('Погибший герой не может находиться в бою.')
+            if b.get('profile')!=enemy_profile(b['enemy'],b['tier']):raise ValueError('Некорректные параметры противника.')
+            if len(set(b['exhausted']))!=len(b['exhausted']) or any(k in b['hand']+b['draw']+b['discard'] for k in b['exhausted']):raise ValueError('Артефакт повторно попал в колоду.')
+            if any(not CARDS[k].get('once') for k in b['exhausted']):raise ValueError('Некорректные исчерпанные артефакты.')
+            held=b.get('retained')
+            if held is not None and (type(held) is not int or not 0<=held<len(b['hand'])):
+                raise ValueError('Некорректная сохраняемая карта.')
             if len(b['hand'])>4 or not isinstance(b['log'],list) or not all(isinstance(x,str) for x in b['log']):
                 raise ValueError('Некорректная рука.')
         except (KeyError,TypeError,StopIteration) as exc:

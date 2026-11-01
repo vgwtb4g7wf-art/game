@@ -6,9 +6,9 @@ import json
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from adventure import Adventure, ITEMS, AVAILABLE_ITEMS, MONSTERS, SAVE
-from combat import CARDS, ITEM_POWER, SKILL_POWER, deck
-from world_content import BIOMES, REGION_LORE
+from adventure import Adventure, ITEMS, AVAILABLE_ITEMS, MONSTERS, SAVE, AVATARS
+from combat import CARDS, ITEM_POWER, SKILL_POWER, deck,selectable
+from world_content import BIOMES, REGION_LORE,enemy_profile
 from progression import COSTS, TREES, PATH_NAMES, unlocked
 from world_systems import calendar
 from eterion import BACKGROUNDS, BRANCHES, COUNTRIES, RACES, REGIONS, ROUTES
@@ -18,8 +18,8 @@ ROOT = Path(__file__).parent / 'web'
 
 def state(game):
     return None if game is None else {
-        'hero': asdict(game.hero), 'paths':game.paths,'selected_skills':game.selected_skills,
-        'unlocked_skills':unlocked(game.hero),'level_points':game.level_points,'calendar':calendar(game.turn),
+        'hero': asdict(game.hero),'dead':game.dead,'failed':len(game.failed),'quest_limit':game.quest_limit(),'offer_limit':game.offer_limit(), 'avatar':game.avatar,'level_notice':game.level_notice,'skills_notice':game.skills_notice(), 'paths':game.paths,'selected_skills':game.selected_skills,
+        'selectable_skills':selectable(game.hero),'unlocked_skills':unlocked(game.hero),'level_points':game.level_points,'calendar':calendar(game.turn),
         'reputation':game.reputation,'fame':game.fame,'event':game.event,'preparation':game.preparation, 'turn': game.turn, 'in_city': game.in_city,
         'hp': game.hp, 'combat_stats': game.combat_stats(), 'battle': game.battle,
         'last_battle': game.last_battle, 'consumables': game.consumables, 'shop': game.shop(),
@@ -29,7 +29,7 @@ def state(game):
         'offers': [asdict(q) for q in game.offers if q.origin == game.hero.region and q.origin_city == game.in_city],
         'active': [asdict(q) for q in game.active], 'completed': len(game.completed),
         'journal': game.journal[-60:], 'wars': sorted(game.wars),
-        'neighbors': [{'name': r, 'kind': k, 'error': game.travel_error(r), 'gate':game.reputation_gate(r)} for r, k in game.neighbors()]}
+        'neighbors': [{'name': r, 'kind': k, 'error': None if game.war_gate(r) and not REGIONS[r].blocked else game.travel_error(r), 'gate':game.reputation_gate(r),'war_gate':game.war_gate(r)} for r, k in game.neighbors()]}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -52,10 +52,10 @@ class Handler(BaseHTTPRequestHandler):
             self.json({'game': state(self.server.game)})
         elif path == '/api/catalog':
             self.json({'races': RACES, 'backgrounds': BACKGROUNDS, 'branches': BRANCHES,
-                       'items': AVAILABLE_ITEMS, 'trees':TREES,'branch_costs':COSTS,'path_names':PATH_NAMES, 'regions': {n: asdict(r) for n, r in REGIONS.items()},
+                       'avatars':AVATARS,'items': AVAILABLE_ITEMS, 'trees':TREES,'branch_costs':COSTS,'path_names':PATH_NAMES, 'regions': {n: asdict(r) for n, r in REGIONS.items()},
                        'routes': ROUTES, 'monsters': MONSTERS, 'countries': COUNTRIES,
                        'cards': CARDS, 'item_power': ITEM_POWER, 'skill_power': SKILL_POWER,
-                       'biomes': BIOMES, 'region_lore': REGION_LORE})
+                       'enemy_profiles':{n:enemy_profile(n,i+1) for _,names,*_ in BIOMES.values() for i,n in enumerate(names)},'biomes': BIOMES, 'region_lore': REGION_LORE})
         elif path in ('/', '/style.css', '/game.js', '/map.js'):
             name = 'index.html' if path == '/' else path[1:]
             mime = {'index.html': 'text/html', 'style.css': 'text/css', 'game.js': 'text/javascript', 'map.js':'text/javascript'}[name]
@@ -79,7 +79,7 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError('Ожидается объект запроса.')
             action = data.get('action')
             game = self.server.game
-            if game is not None and game.battle is not None and action not in ('play','end_round','flee','save','load'):
+            if game is not None and game.battle is not None and action not in ('play','retain','end_round','flee','save','load'):
                 raise ValueError('Сначала завершите дуэль или отступите.')
             if game is not None and game.preparation is not None and action not in ('begin_battle','cancel_preparation','save','load','dismiss_result'):
                 raise ValueError('Завершите или отмените подготовку к бою.')
@@ -123,6 +123,12 @@ class Handler(BaseHTTPRequestHandler):
                 game.buy(data['card'])
             elif action == 'play':
                 game.play_card(data['index'])
+            elif action == 'ack_level':
+                game.level_notice=0
+            elif action == 'ack_skills':
+                game.skill_notices=[]
+            elif action == 'retain':
+                game.retain_card(data.get('index'))
             elif action == 'end_round':
                 game.end_round()
             elif action == 'flee':

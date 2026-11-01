@@ -25,7 +25,7 @@ def resolve(game):
         hand = game.battle['hand']
         options = [(i, CARDS[key]) for i,key in enumerate(hand) if CARDS[key]['cost']<=game.battle['energy']]
         if options:
-            index,_ = max(options,key=lambda p:(p[1]['damage'],p[1]['heal'],p[1]['block']))
+            index,_ = max(options,key=lambda p:(p[1].get('ratio',0)+p[1]['damage'],p[1]['heal'],p[1]['block']))
             game.play_card(index)
         else:
             game.end_round()
@@ -40,7 +40,7 @@ class AdventureTests(unittest.TestCase):
         self.assertTrue(all(1<=q.difficulty<=5 for q in game.offers))
         for q in game.offers:
             if q.monster:
-                self.assertEqual(q.difficulty,min(3,q.monster_tier+min(1,q.distance//3)))
+                self.assertEqual(q.difficulty,q.monster_tier)
         self.assertTrue(any(q.target == game.hero.region for q in game.offers))
         self.assertTrue(any(q.target != game.hero.region for q in game.offers))
         self.assertTrue(any(q.monster for q in game.offers))
@@ -71,7 +71,7 @@ class AdventureTests(unittest.TestCase):
         game = create()
         game.enter_city()
         game.search()
-        q = next(q for q in game.offers if q.city)
+        q = next(q for q in game.offers if q.city and q.target!=game.hero.region)
         game.accept(q.id)
         before = game.turn
         with self.assertRaises(ValueError):
@@ -92,13 +92,13 @@ class AdventureTests(unittest.TestCase):
         game = create()
         game.search()
         ids = [q.id for q in game.offers]
-        for id in ids[:3]:
+        for id in ids[:2]:
             game.accept(id)
         with self.assertRaises(ValueError):
-            game.accept(ids[3])
+            game.accept(ids[2])
         game.abandon(ids[0])
         game.search()
-        self.assertEqual(len(game.active), 2)
+        self.assertEqual(len(game.active), 1)
         self.assertFalse(set(ids) & {q.id for q in game.offers})
         with self.assertRaises(ValueError):
             game.accept(ids[0])
@@ -114,12 +114,12 @@ class AdventureTests(unittest.TestCase):
         game = create()
         with self.assertRaises(ValueError):
             game.equip('Кольчуга')
-        game.bag.extend(['Кольчуга', 'Боевой топор'])
+        game.bag.extend(['Кольчуга', 'Короткий кинжал'])
         game.equip('Кольчуга')
-        game.equip('Боевой топор')
+        game.equip('Короткий кинжал')
         self.assertEqual(game.hero.equipment['Доспех'], 'Кольчуга')
         self.assertIn('Железный меч', game.bag)
-        self.assertEqual(game.hero.equipment['Оружие'], 'Боевой топор')
+        self.assertEqual(game.hero.equipment['Оружие'], 'Короткий кинжал')
         game.unequip('Оружие')
         self.assertIsNone(game.hero.equipment['Оружие'])
         self.assertEqual(game.turn, 1)
@@ -184,7 +184,7 @@ class ServerTests(unittest.TestCase):
                     b=done['battle']
                     options=[(i,CARDS[key]) for i,key in enumerate(b['hand']) if CARDS[key]['cost']<=b['energy']]
                     if options:
-                        index,_=max(options,key=lambda pair:pair[1]['damage'])
+                        index,_=max(options,key=lambda pair:pair[1].get('ratio',0)+pair[1]['damage'])
                         done=post('play',index=index)
                     else:
                         done=post('end_round')
